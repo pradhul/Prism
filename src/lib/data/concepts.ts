@@ -16,7 +16,7 @@ export const concepts: Concept[] = [
 		title: 'Timeline & Bubbles',
 		tagline: 'Your day, grouped by intent.',
 		description:
-			'Folders and lists disappear. Mail flows as a timeline grouped by Action Required, Reading and Receipts — each conversation an expandable bubble with an AI gist.',
+			'Folders and lists disappear. Mail flows as a timeline grouped by what it needs from you — Needs Action, Orders, Catch Up — each group with its own one-tap interaction.',
 		route: '/stream',
 		badge: 'Fluid · Glass',
 		swatch: 'from-violet-400 via-sky-400 to-teal-300'

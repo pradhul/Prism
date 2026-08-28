@@ -10,14 +10,12 @@
 	const thread = $derived(getThread(page.params.id ?? ''));
 	const curated = $derived(inbox.threads.filter((t) => t.curated && !t.archived));
 
-	let filter = $state<CategoryKey | 'all'>('all');
+	// Start scoped to the opened story's category; after that the Arc nav and
+	// swipes control the filter (navigation must not reset it).
+	let filter = $state<CategoryKey | 'all'>(getThread(page.params.id ?? '')?.category ?? 'all');
 	let gistOpen = $state(false);
 	let touchStartX = 0;
 	let touchStartY = 0;
-
-	$effect(() => {
-		if (thread) filter = thread.category;
-	});
 
 	$effect(() => {
 		if (thread?.unread) markRead(thread.id);

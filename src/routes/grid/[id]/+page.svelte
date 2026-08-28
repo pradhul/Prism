@@ -1,10 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { getThread } from '$lib/data/emails';
+	import { getThread, markRead } from '$lib/state/inbox.svelte';
 	import { categories } from '$lib/data/categories';
 
 	const thread = $derived(getThread(page.params.id ?? ''));
+
+	$effect(() => {
+		if (thread?.unread) markRead(thread.id);
+	});
 
 	const actions = [
 		{ label: 'Reply', icon: 'reply' },

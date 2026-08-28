@@ -10,14 +10,23 @@ const avatars = {
 	indigo: 'bg-indigo-100 text-indigo-700'
 };
 
-export const threads: Thread[] = [
+/**
+ * Hand-authored demo threads. These are the "interesting" conversations that the
+ * Grid hero and the Arc brief surface. The long tail of a realistic mailbox
+ * (~1,400 mails) is generated in `bulk.ts` and merged in the inbox store.
+ */
+export const curatedThreads: Thread[] = [
 	{
 		id: 'marcus-timeline',
 		subject: 'Client wants an updated Q3 timeline + slide sign-off',
-		intent: 'action',
+		group: 'action',
 		category: 'work',
 		priority: 'urgent',
 		unread: true,
+		done: false,
+		archived: false,
+		daysAgo: 0,
+		curated: true,
 		timestamp: '09:15',
 		timeGroup: 'Today',
 		gist: 'Client needs a new Q3 delivery timeline and formal approval on the slide deck before you present — by end of day.',
@@ -62,10 +71,15 @@ export const threads: Thread[] = [
 	{
 		id: 'sarah-vc-report',
 		subject: 'Q3 Venture Capital Report & Analysis',
-		intent: 'reading',
+		group: 'catchup',
 		category: 'work',
 		priority: 'high',
 		unread: true,
+		done: false,
+		archived: false,
+		daysAgo: 0,
+		curated: true,
+		readMin: 4,
 		timestamp: '09:42',
 		timeGroup: 'Today',
 		gist: 'The latest metrics show a 20% jump in mobile engagement — worth a skim before the Q3 review.',
@@ -98,17 +112,21 @@ export const threads: Thread[] = [
 	{
 		id: 'design-figma',
 		subject: 'Figma prototypes updated for review',
-		intent: 'reading',
+		group: 'action',
 		category: 'work',
 		priority: 'normal',
-		unread: true,
+		unread: false,
+		done: false,
+		archived: false,
+		daysAgo: 0,
+		curated: true,
 		timestamp: '10:15',
 		timeGroup: 'Today',
-		gist: 'New onboarding flow prototypes are ready — three variants, feedback wanted by Thursday.',
+		gist: 'New onboarding flow prototypes are ready — three variants, your feedback wanted by Thursday.',
 		summary: [
 			'Three onboarding flow variants are ready for review.',
 			'Design team is leaning toward variant B for its shorter path to value.',
-			'Feedback requested by Thursday standup.'
+			'Feedback requested by Thursday standup — you read this but haven’t replied yet.'
 		],
 		sender: 'Design Team',
 		senderInitials: 'DT',
@@ -133,17 +151,21 @@ export const threads: Thread[] = [
 	{
 		id: 'marketing-campaign',
 		subject: 'Q4 Campaign assets — final approval needed',
-		intent: 'action',
+		group: 'action',
 		category: 'work',
 		priority: 'high',
 		unread: false,
-		timestamp: 'Yesterday',
-		timeGroup: 'Yesterday',
-		gist: 'Final Q4 campaign assets are ready to ship — just needs your sign-off to go to print and social.',
+		done: false,
+		archived: false,
+		daysAgo: 5,
+		curated: true,
+		timestamp: 'Oct 30',
+		timeGroup: 'Earlier',
+		gist: 'Final Q4 campaign assets are ready to ship — read 5 days ago but your sign-off is still pending.',
 		summary: [
 			'All Q4 campaign creative has been finalized across print, email and social.',
 			'Legal has already cleared the copy.',
-			'Only your approval is blocking the go-live.'
+			'Only your approval is blocking the go-live — pending for 5 days.'
 		],
 		sender: 'Marketing',
 		senderInitials: 'MK',
@@ -155,7 +177,7 @@ export const threads: Thread[] = [
 				sender: 'Marketing Team',
 				senderInitials: 'MK',
 				avatar: avatars.amber,
-				time: 'Yesterday, 16:04',
+				time: 'Oct 30, 16:04',
 				highlighted: true,
 				body: [
 					'Final assets for the Q4 campaign are attached — print, email and social sizes all included.',
@@ -168,16 +190,20 @@ export const threads: Thread[] = [
 	{
 		id: 'alex-lunch',
 		subject: 'Lunch tomorrow at the new bistro?',
-		intent: 'reading',
+		group: 'action',
 		category: 'personal',
 		priority: 'low',
 		unread: false,
+		done: false,
+		archived: false,
+		daysAgo: 1,
+		curated: true,
 		timestamp: 'Yesterday',
 		timeGroup: 'Yesterday',
-		gist: 'Alex wants to grab lunch tomorrow at the new place on 5th — apparently the bread is worth it.',
+		gist: 'Alex asked about lunch tomorrow at the new place on 5th — you read it but never told him a time.',
 		summary: [
 			'Alex is proposing lunch tomorrow at the new bistro on 5th.',
-			'No time suggested yet — a reply confirming works either way.'
+			'He asked what time works — no reply sent yet.'
 		],
 		sender: 'Alex B.',
 		senderInitials: 'AB',
@@ -201,11 +227,15 @@ export const threads: Thread[] = [
 	{
 		id: 'itops-maintenance',
 		subject: 'Server maintenance scheduled for this weekend',
-		intent: 'reading',
+		group: 'other',
 		category: 'updates',
 		priority: 'low',
 		unread: false,
-		timestamp: 'Nov 2',
+		done: false,
+		archived: false,
+		daysAgo: 6,
+		curated: true,
+		timestamp: 'Oct 29',
 		timeGroup: 'Earlier',
 		gist: 'Routine maintenance this Saturday, 1–3am — brief downtime expected, no action needed.',
 		summary: [
@@ -223,7 +253,7 @@ export const threads: Thread[] = [
 				sender: 'IT Ops',
 				senderInitials: 'IT',
 				avatar: avatars.slate,
-				time: 'Nov 2, 08:00',
+				time: 'Oct 29, 08:00',
 				body: [
 					'Heads up — we’re running routine server maintenance this Saturday between 1:00 and 3:00am.',
 					'You may see brief downtime on internal tools. No action is needed on your end.'
@@ -234,11 +264,16 @@ export const threads: Thread[] = [
 	{
 		id: 'stripe-receipt',
 		subject: 'Your receipt for Prism Pro — $12.00',
-		intent: 'receipt',
+		group: 'orders',
 		category: 'finance',
 		priority: 'low',
 		unread: false,
-		timestamp: 'Today',
+		done: false,
+		archived: false,
+		daysAgo: 0,
+		curated: true,
+		merchant: 'Subscriptions',
+		timestamp: '06:02',
 		timeGroup: 'Today',
 		gist: 'Monthly Prism Pro subscription renewed — $12.00 charged to your card ending 4471.',
 		summary: ['Subscription renewed for another month.', 'Card ending 4471 was charged $12.00.'],
@@ -260,23 +295,28 @@ export const threads: Thread[] = [
 	{
 		id: 'amazon-shipped',
 		subject: 'Your order has shipped 📦',
-		intent: 'receipt',
+		group: 'orders',
 		category: 'finance',
 		priority: 'low',
-		unread: false,
-		timestamp: 'Today',
+		unread: true,
+		done: false,
+		archived: false,
+		daysAgo: 0,
+		curated: true,
+		merchant: 'Amazon',
+		timestamp: '07:40',
 		timeGroup: 'Today',
 		gist: 'Desk lamp and cables are on the way — arriving Thursday via standard shipping.',
 		summary: ['Order #4471-99 has shipped.', 'Estimated delivery: Thursday.'],
-		sender: 'Orders',
-		senderInitials: 'OR',
+		sender: 'Amazon',
+		senderInitials: 'AZ',
 		avatar: avatars.amber,
-		tags: ['Receipt'],
+		tags: ['Delivery'],
 		messages: [
 			{
 				id: 'm1',
-				sender: 'Orders',
-				senderInitials: 'OR',
+				sender: 'Amazon',
+				senderInitials: 'AZ',
 				avatar: avatars.amber,
 				time: 'Today, 07:40',
 				body: ['Good news — your order is on its way.', 'Desk lamp, USB-C cable ×2. Arriving Thursday.']
@@ -286,11 +326,15 @@ export const threads: Thread[] = [
 	{
 		id: 'hr-benefits',
 		subject: 'Health benefits enrollment ends Friday',
-		intent: 'action',
+		group: 'action',
 		category: 'work',
 		priority: 'high',
 		unread: true,
-		timestamp: 'Today',
+		done: false,
+		archived: false,
+		daysAgo: 0,
+		curated: true,
+		timestamp: '08:05',
 		timeGroup: 'Today',
 		gist: 'Open enrollment closes Friday at 5pm — you have not yet selected a plan for next year.',
 		summary: [
@@ -320,10 +364,14 @@ export const threads: Thread[] = [
 	{
 		id: 'priya-lease',
 		subject: 'Lease renewal — a couple of questions',
-		intent: 'action',
+		group: 'action',
 		category: 'personal',
 		priority: 'high',
 		unread: true,
+		done: false,
+		archived: false,
+		daysAgo: 1,
+		curated: true,
 		timestamp: 'Yesterday',
 		timeGroup: 'Yesterday',
 		gist: 'Your landlord sent the renewal terms and needs a decision on the 12-month option by next week.',
@@ -355,11 +403,15 @@ export const threads: Thread[] = [
 	{
 		id: 'bank-signin',
 		subject: 'Unusual sign-in detected on your account',
-		intent: 'action',
+		group: 'action',
 		category: 'urgent',
 		priority: 'urgent',
 		unread: true,
-		timestamp: 'Today',
+		done: false,
+		archived: false,
+		daysAgo: 0,
+		curated: true,
+		timestamp: '06:51',
 		timeGroup: 'Today',
 		gist: 'A new sign-in from an unrecognized device in Austin, TX. Confirm it was you or secure your account now.',
 		summary: [
@@ -389,10 +441,15 @@ export const threads: Thread[] = [
 	{
 		id: 'coach-progress',
 		subject: 'Your weekly progress summary',
-		intent: 'reading',
+		group: 'catchup',
 		category: 'personal',
 		priority: 'low',
 		unread: false,
+		done: false,
+		archived: false,
+		daysAgo: 1,
+		curated: true,
+		readMin: 2,
 		timestamp: 'Yesterday',
 		timeGroup: 'Yesterday',
 		gist: 'Four workouts logged this week, up from two — coach left a note about Saturday’s long run.',
@@ -421,10 +478,15 @@ export const threads: Thread[] = [
 	{
 		id: 'digest-newsletter',
 		subject: 'The Interface: 5 product design ideas worth stealing',
-		intent: 'reading',
+		group: 'catchup',
 		category: 'updates',
 		priority: 'low',
-		unread: false,
+		unread: true,
+		done: false,
+		archived: false,
+		daysAgo: 1,
+		curated: true,
+		readMin: 5,
 		timestamp: 'Yesterday',
 		timeGroup: 'Yesterday',
 		gist: 'This week’s roundup covers ambient AI patterns, editorial inbox UIs, and better empty states.',
@@ -452,11 +514,16 @@ export const threads: Thread[] = [
 	{
 		id: 'recruiter-pm',
 		subject: 'Thinking of you for a Senior PM role',
-		intent: 'reading',
+		group: 'catchup',
 		category: 'work',
 		priority: 'normal',
 		unread: false,
-		timestamp: 'Nov 2',
+		done: false,
+		archived: false,
+		daysAgo: 6,
+		curated: true,
+		readMin: 2,
+		timestamp: 'Oct 29',
 		timeGroup: 'Earlier',
 		gist: 'A recruiter reached out about a Senior PM role at a Series C startup — open to a quick chat.',
 		summary: [
@@ -473,7 +540,7 @@ export const threads: Thread[] = [
 				sender: 'Jordan (Recruiter)',
 				senderInitials: 'JR',
 				avatar: avatars.violet,
-				time: 'Nov 2, 15:10',
+				time: 'Oct 29, 15:10',
 				body: [
 					'Came across your profile and thought of you for a Senior PM role at a Series C fintech startup.',
 					'No pressure at all — happy to do a quick 15-minute call if you’re curious.'
@@ -484,11 +551,15 @@ export const threads: Thread[] = [
 	{
 		id: 'flight-gate',
 		subject: 'Gate change for your flight tomorrow',
-		intent: 'action',
+		group: 'action',
 		category: 'urgent',
 		priority: 'urgent',
 		unread: true,
-		timestamp: 'Today',
+		done: false,
+		archived: false,
+		daysAgo: 0,
+		curated: true,
+		timestamp: '05:30',
 		timeGroup: 'Today',
 		gist: 'Flight 208 to SFO moved from Gate B12 to C4 — same departure time, boarding pass updated.',
 		summary: [
@@ -519,13 +590,17 @@ export const threads: Thread[] = [
 	{
 		id: 'utility-bill',
 		subject: 'Your electricity bill is due in 3 days',
-		intent: 'action',
+		group: 'action',
 		category: 'finance',
 		priority: 'normal',
 		unread: false,
-		timestamp: 'Yesterday',
-		timeGroup: 'Yesterday',
-		gist: '$84.20 due November 5th — autopay is off for this account, so a manual payment is needed.',
+		done: false,
+		archived: false,
+		daysAgo: 3,
+		curated: true,
+		timestamp: 'Nov 1',
+		timeGroup: 'Earlier',
+		gist: '$84.20 due November 5th — autopay is off, you opened this 3 days ago but haven’t paid yet.',
 		summary: ['Amount due: $84.20.', 'Due date: November 5th.', 'Autopay is currently disabled on this account.'],
 		sender: 'City Power & Light',
 		senderInitials: 'CP',
@@ -537,7 +612,7 @@ export const threads: Thread[] = [
 				sender: 'City Power & Light',
 				senderInitials: 'CP',
 				avatar: avatars.amber,
-				time: 'Yesterday, 09:00',
+				time: 'Nov 1, 09:00',
 				body: ['Your balance of $84.20 is due November 5th.', 'Autopay is off — please pay manually to avoid a late fee.']
 			}
 		]
@@ -545,13 +620,17 @@ export const threads: Thread[] = [
 	{
 		id: 'lead-1on1',
 		subject: '1:1 notes and action items',
-		intent: 'action',
+		group: 'action',
 		category: 'work',
 		priority: 'normal',
 		unread: false,
-		timestamp: 'Yesterday',
-		timeGroup: 'Yesterday',
-		gist: 'Notes from your 1:1 — three follow-ups, including scoping the inbox redesign spike.',
+		done: false,
+		archived: false,
+		daysAgo: 4,
+		curated: true,
+		timestamp: 'Oct 31',
+		timeGroup: 'Earlier',
+		gist: 'Notes from your 1:1 — three follow-ups still open, including scoping the inbox redesign spike.',
 		summary: [
 			'Follow-up 1: scope the inbox redesign spike by Friday.',
 			'Follow-up 2: share updated roadmap slide with design.',
@@ -567,7 +646,7 @@ export const threads: Thread[] = [
 				sender: 'Nina (Manager)',
 				senderInitials: 'NM',
 				avatar: avatars.indigo,
-				time: 'Yesterday, 17:15',
+				time: 'Oct 31, 17:15',
 				body: [
 					'Good chat today — recapping the three things we agreed on:',
 					'1) Scope the inbox redesign spike by Friday. 2) Share the updated roadmap slide with design. 3) Schedule user interviews for next sprint.'
@@ -578,12 +657,16 @@ export const threads: Thread[] = [
 	{
 		id: 'wedding-rsvp',
 		subject: 'RSVP reminder — deadline this weekend',
-		intent: 'action',
+		group: 'action',
 		category: 'personal',
 		priority: 'high',
 		unread: true,
-		timestamp: 'Yesterday',
-		timeGroup: 'Yesterday',
+		done: false,
+		archived: false,
+		daysAgo: 2,
+		curated: true,
+		timestamp: 'Nov 2',
+		timeGroup: 'Earlier',
 		gist: 'The venue needs a final headcount by Sunday — your RSVP is still pending.',
 		summary: [
 			'RSVP deadline is this Sunday at midnight.',
@@ -600,7 +683,7 @@ export const threads: Thread[] = [
 				sender: 'Maya & Tom',
 				senderInitials: 'MT',
 				avatar: avatars.teal,
-				time: 'Yesterday, 12:00',
+				time: 'Nov 2, 12:00',
 				highlighted: true,
 				body: [
 					'Quick reminder that RSVPs are due this Sunday at midnight!',
@@ -610,18 +693,3 @@ export const threads: Thread[] = [
 		]
 	}
 ];
-
-export function getThread(id: string): Thread | undefined {
-	return threads.find((t) => t.id === id);
-}
-
-export function threadsByIntent(intent: Thread['intent']): Thread[] {
-	return threads.filter((t) => t.intent === intent);
-}
-
-export function threadsByCategory(category: Thread['category']): Thread[] {
-	return threads.filter((t) => t.category === category);
-}
-
-export const unreadCount = threads.filter((t) => t.unread).length;
-export const actionCount = threads.filter((t) => t.intent === 'action').length;

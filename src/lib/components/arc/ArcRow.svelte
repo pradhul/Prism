@@ -12,18 +12,43 @@
 	const cat = $derived(categories[thread.category]);
 </script>
 
-<button type="button" onclick={() => goto(`/arc/${thread.id}`)} class="tap-scale block w-full text-left">
-	<div class="mb-1.5 flex items-center gap-1.5">
+<button
+	type="button"
+	onclick={() => goto(`/arc/${thread.id}`)}
+	class="tap-scale block w-full text-left {thread.unread ? '' : 'opacity-60'}"
+>
+	<div class="mb-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1">
 		<span class="text-[10.5px] font-semibold tracking-[0.08em] text-neutral-500 uppercase">
 			{cat.label} · {thread.timestamp}
 		</span>
-		{#if thread.unread}
-			<span class="ml-auto h-2 w-2 shrink-0 rounded-sm" style={`background:${cat.accent}`}></span>
-		{/if}
+		<span class="ml-auto flex items-center gap-1">
+			{#if thread.unread}
+				<span
+					class="rounded-[4px] px-1.5 py-0.5 text-[9px] font-bold tracking-[0.06em] text-white uppercase"
+					style={`background:${cat.accent}`}
+				>
+					Unread
+				</span>
+			{:else}
+				<span class="rounded-[4px] bg-neutral-200/80 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.06em] text-neutral-500 uppercase">
+					Read
+				</span>
+			{/if}
+			{#if thread.group === 'action' && !thread.done}
+				<span class="rounded-[4px] border border-ink/60 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.06em] text-ink uppercase">
+					Reply needed
+				</span>
+			{/if}
+			{#if thread.group === 'orders' && thread.merchant}
+				<span class="rounded-[4px] border border-neutral-300 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.06em] text-neutral-500 uppercase">
+					Order · {thread.merchant}
+				</span>
+			{/if}
+		</span>
 	</div>
 
 	<h3
-		class="font-serif text-ink {variant === 'hero'
+		class="font-serif {thread.unread ? 'text-ink' : 'text-neutral-500'} {variant === 'hero'
 			? 'text-[26px] leading-[1.12] font-semibold'
 			: variant === 'feature'
 				? 'text-[19px] leading-snug font-semibold'

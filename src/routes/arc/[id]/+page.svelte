@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { getThread, threads } from '$lib/data/emails';
+	import { inbox, getThread, markRead } from '$lib/state/inbox.svelte';
 	import { categories } from '$lib/data/categories';
 	import Avatar from '$lib/components/shared/Avatar.svelte';
 	import ArcBottomNav from '$lib/components/arc/ArcBottomNav.svelte';
 	import type { CategoryKey } from '$lib/types';
 
 	const thread = $derived(getThread(page.params.id ?? ''));
+	const curated = $derived(inbox.threads.filter((t) => t.curated && !t.archived));
 
 	let filter = $state<CategoryKey | 'all'>('all');
 	let gistOpen = $state(false);
@@ -18,7 +19,11 @@
 		if (thread) filter = thread.category;
 	});
 
-	const feed = $derived(filter === 'all' ? threads : threads.filter((t) => t.category === filter));
+	$effect(() => {
+		if (thread?.unread) markRead(thread.id);
+	});
+
+	const feed = $derived(filter === 'all' ? curated : curated.filter((t) => t.category === filter));
 	const index = $derived(thread ? feed.findIndex((t) => t.id === thread.id) : -1);
 
 	function go(delta: number) {
@@ -30,7 +35,7 @@
 
 	function selectCategory(key: CategoryKey | 'all') {
 		filter = key;
-		const list = key === 'all' ? threads : threads.filter((t) => t.category === key);
+		const list = key === 'all' ? curated : curated.filter((t) => t.category === key);
 		if (list.length) goto(`/arc/${list[0].id}`);
 	}
 

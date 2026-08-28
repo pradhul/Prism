@@ -4,10 +4,11 @@ Prism is a mobile-first web app that rethinks what an email inbox can look like.
 more folder-and-list client, it explores **three distinct, AI-native inbox experiences** and lets
 you switch between them freely:
 
-1. **The Contextual Stream** (`/stream`) — Timeline & Bubbles. Mail is grouped by intent
-   (Action Required, Reading, Receipts) on a vertical timeline. Each conversation is a
-   glassmorphic, expandable "bubble" with an AI-generated gist, so you can get the point without
-   opening a single email.
+1. **The Contextual Stream** (`/stream`) — Timeline & Bubbles. Mail is grouped by what it needs
+   from you, and every group has its own interaction: **Needs Action** (read or unread, still
+   pending — mark ✓ done to dismiss), **Orders & Deliveries** (sub-grouped by store with one-tap
+   "Clear all" per merchant), **Catch Up** (newsletters & FYI with read-time estimates and
+   "mark all read"), and **Everything Else**. Read mail stays visible, greyed out.
 2. **The Priority Grid** (`/grid`) — Card-based navigation. A bento-style dashboard: one bold
    hero card for whatever AI thinks matters most, and a grid of smaller monochrome tiles for
    everything else. Feels like a personalized news feed.
@@ -19,9 +20,18 @@ The flow is: **splash screen → simple start page → pick a concept → inbox.
 has a small switcher so you can jump between all three concepts (or back to the start) at any
 time — handy for comparing them side by side.
 
-This is a first-draft prototype: all inbox content is mocked (`src/lib/data/emails.ts`), light
-mode only, and built for phone-sized viewports first (tablet/desktop and native iOS/Android are
-future work).
+Every view also links to **AI search** (`/search`): describe a mail loosely ("the pdf marcus
+sent about the timeline", "amazon refund last month") and Prism scores the whole mailbox against
+it, defaulting to the past month, and explains how it interpreted your query and why each result
+matched.
+
+To feel honest at real-inbox scale, the prototype simulates a mailbox of **~1,400 mails
+(~200 unread)**: 17 hand-authored conversations (`src/lib/data/emails.ts`) plus a deterministic
+generated long tail (`src/lib/data/bulk.ts`). Read/unread, mark-done, and clear-merchant state is
+held in a reactive store (`src/lib/state/inbox.svelte.ts`).
+
+This is an early prototype: light mode only, built for phone-sized viewports first
+(tablet/desktop and native iOS/Android are future work).
 
 ## Stack
 
@@ -59,13 +69,17 @@ src/
     stream/                # Contextual Stream: list + /stream/[id] thread view
     grid/                  # Priority Grid: dashboard + /grid/[id] detail view
     arc/                   # Focused Arc: "The Prism Brief" list + /arc/[id] focused reader
+    search/                # AI search over the whole mailbox
   lib/
     components/
       shared/              # Avatar, ConceptSwitcher, PrismMark (logo)
       stream/ grid/ arc/    # concept-specific building blocks
     data/
-      emails.ts            # mock inbox data shared by all three concepts
-      categories.ts intents.ts concepts.ts
+      emails.ts            # hand-authored demo conversations
+      bulk.ts              # deterministic ~1,400-mail long tail
+      categories.ts groups.ts concepts.ts
+    state/
+      inbox.svelte.ts      # reactive inbox: read/done/archive state + AI search scoring
     types.ts
 ```
 

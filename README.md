@@ -9,6 +9,9 @@ you switch between them freely:
    pending — mark ✓ done to dismiss), **Orders & Deliveries** (sub-grouped by store with one-tap
    "Clear all" per merchant), **Catch Up** (newsletters & FYI with read-time estimates and
    "mark all read"), and **Everything Else**. Read mail stays visible, greyed out.
+
+   <img width="1470" height="808" alt="image" src="https://github.com/user-attachments/assets/b312da29-97c7-4258-9656-17ec677c8405" />
+
 2. **The Priority Grid** (`/grid`) — Card-based navigation. A bento-style dashboard: one bold
    hero card for whatever AI thinks matters most, and a grid of smaller monochrome tiles for
    everything else. Feels like a personalized news feed.

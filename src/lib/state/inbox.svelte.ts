@@ -2,14 +2,60 @@ import { curatedThreads } from '$lib/data/emails';
 import { bulkThreads } from '$lib/data/bulk';
 import type { Thread, Group } from '$lib/types';
 
+const demoThreads = [...curatedThreads, ...bulkThreads] as Thread[];
+
 /**
- * Client-side reactive inbox. In a real product this would be backed by a mail
- * API; here it lets the prototype demonstrate group-specific interactions:
- * mark done, clear a merchant, mark a group read, mark read on open.
+ * Client-side reactive inbox. Uses mock data until Gmail sync loads live threads.
  */
 export const inbox = $state({
-	threads: [...curatedThreads, ...bulkThreads] as Thread[]
+	threads: [...demoThreads] as Thread[],
+	source: 'demo' as 'demo' | 'gmail',
+	syncing: false
 });
+
+export function useDemoInbox() {
+	inbox.threads = [...demoThreads];
+	inbox.source = 'demo';
+}
+
+export function setLiveThreads(threads: Thread[]) {
+	inbox.threads = threads;
+	inbox.source = 'gmail';
+}
+
+export async function loadLiveInbox(): Promise<boolean> {
+	const res = await fetch('/api/inbox');
+	if (res.status === 401) return false;
+	if (!res.ok) throw new Error('Failed to load inbox');
+	const data = (await res.json()) as { threads: Thread[] };
+	setLiveThreads(data.threads);
+	return true;
+}
+
+export async function syncLiveInbox(): Promise<number> {
+	inbox.syncing = true;
+	try {
+		const res = await fetch('/api/inbox/sync', { method: 'POST' });
+		if (!res.ok) {
+			const text = await res.text();
+			throw new Error(text || 'Sync failed');
+		}
+		const data = (await res.json()) as { synced: number };
+		await loadLiveInbox();
+		return data.synced;
+	} finally {
+		inbox.syncing = false;
+	}
+}
+
+function persistPatch(id: string, patch: Record<string, unknown>) {
+	if (inbox.source !== 'gmail') return;
+	void fetch(`/api/inbox/${encodeURIComponent(id)}`, {
+		method: 'PATCH',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(patch)
+	});
+}
 
 export function getThread(id: string): Thread | undefined {
 	return inbox.threads.find((t) => t.id === id);
@@ -17,7 +63,10 @@ export function getThread(id: string): Thread | undefined {
 
 export function markRead(id: string) {
 	const t = getThread(id);
-	if (t) t.unread = false;
+	if (t) {
+		t.unread = false;
+		persistPatch(id, { unread: false });
+	}
 }
 
 export function markDone(id: string, done = true) {
@@ -25,6 +74,7 @@ export function markDone(id: string, done = true) {
 	if (t) {
 		t.done = done;
 		if (done) t.unread = false;
+		persistPatch(id, { done, unread: done ? false : t.unread });
 	}
 }
 
@@ -33,13 +83,17 @@ export function clearMerchant(merchant: string) {
 		if (t.group === 'orders' && t.merchant === merchant && !t.archived) {
 			t.archived = true;
 			t.unread = false;
+			persistPatch(t.id, { archived: true, unread: false });
 		}
 	}
 }
 
 export function markGroupRead(group: Group) {
 	for (const t of inbox.threads) {
-		if (t.group === group) t.unread = false;
+		if (t.group === group && t.unread) {
+			t.unread = false;
+			persistPatch(t.id, { unread: false });
+		}
 	}
 }
 

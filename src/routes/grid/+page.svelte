@@ -20,8 +20,9 @@
 	// reachable through search rather than crowding the grid.
 	const curated = $derived(live.filter((t) => t.curated));
 
+	// Suspicious mail never gets the hero spot — it shows as a flagged tile instead.
 	const hero = $derived(
-		[...curated].sort(
+		curated.filter((t) => !t.risk).sort(
 			(a, b) => priorityScore[b.priority] - priorityScore[a.priority] || (b.unread ? 1 : 0) - (a.unread ? 1 : 0)
 		)[0]
 	);

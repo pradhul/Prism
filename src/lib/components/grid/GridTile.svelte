@@ -14,7 +14,11 @@
 		? 'col-span-2'
 		: ''} {thread.unread ? 'border-2 border-ink bg-white' : 'border-2 border-neutral-200 bg-neutral-100/60'}"
 >
-	{#if thread.unread}
+	{#if thread.risk}
+		<span class="absolute top-3 right-3 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-white uppercase">
+			⚠ Suspicious
+		</span>
+	{:else if thread.unread}
 		<span class="absolute top-3 right-3 rounded-full bg-lime-300 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-ink uppercase">
 			New
 		</span>

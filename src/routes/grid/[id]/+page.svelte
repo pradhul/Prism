@@ -82,6 +82,34 @@
 							</div>
 						{/each}
 					</div>
+
+					{#if thread.risk}
+						<div class="mt-3 rounded-xl border-2 border-ink bg-ink p-3 text-white">
+							<p class="text-[11px] font-bold tracking-wide uppercase">⚠ Flagged as suspicious</p>
+							<ul class="mt-1.5 flex flex-col gap-1">
+								{#each thread.risk.reasons as r (r)}
+									<li class="text-[12px] leading-relaxed text-white/80">— {r}</li>
+								{/each}
+							</ul>
+							{#if thread.actionLink}
+								<p class="mt-2 border-t border-white/20 pt-2 text-[11.5px] text-white/70">
+									Link withheld: “{thread.actionLink.label}” → {new URL(thread.actionLink.url).hostname}
+								</p>
+							{/if}
+						</div>
+					{:else if thread.actionLink}
+						<a
+							href={thread.actionLink.url}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="tap-scale mt-3 flex items-center justify-center gap-1.5 rounded-xl border-2 border-ink bg-ink py-2.5 text-[12px] font-bold tracking-wide text-white uppercase"
+						>
+							{thread.actionLink.label}
+							<svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none">
+								<path d="M7 17 17 7m0 0H9m8 0v8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+							</svg>
+						</a>
+					{/if}
 				</div>
 
 				<div class="mt-6 flex flex-col gap-3">

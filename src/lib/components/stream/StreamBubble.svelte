@@ -30,9 +30,11 @@
 	tabindex="0"
 	onclick={open}
 	onkeydown={(e) => e.key === 'Enter' && open()}
-	class="tap-scale relative w-full cursor-pointer rounded-[22px] p-4 text-left ring-1 ring-black/[0.04] {thread.unread
-		? 'glass shadow-glass'
-		: 'bg-white/45'}"
+	class="tap-scale relative w-full cursor-pointer rounded-[22px] p-4 text-left {thread.risk
+		? 'bg-rose-50/70 ring-1 ring-rose-200'
+		: thread.unread
+			? 'glass shadow-glass ring-1 ring-black/[0.04]'
+			: 'bg-white/45 ring-1 ring-black/[0.04]'}"
 >
 	<div class="flex items-center gap-2.5 {thread.unread ? '' : 'opacity-55'}">
 		<Avatar initials={thread.senderInitials} classes={thread.avatar} size="sm" />
@@ -77,7 +79,11 @@
 	<div class="mt-3 flex items-center gap-1.5">
 		<span class="rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 {cat.tint}">{cat.label}</span>
 
-		{#if thread.group === 'action'}
+		{#if thread.risk}
+			<span class="flex items-center gap-1 rounded-full bg-rose-500 px-2.5 py-1 text-[11px] font-bold text-white">
+				⚠ Suspicious
+			</span>
+		{:else if thread.group === 'action'}
 			<span class="rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-medium text-rose-500 ring-1 ring-rose-100">
 				{thread.daysAgo === 0 ? 'waiting since today' : `waiting ${thread.daysAgo}d`}
 			</span>

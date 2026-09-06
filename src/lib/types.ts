@@ -57,4 +57,8 @@ export interface Thread {
 	readMin?: number;
 	/** hand-authored demo threads (surfaced in Grid hero / Arc brief) */
 	curated?: boolean;
+	/** primary link found inside the mail, surfaced as a button on the AI summary card */
+	actionLink?: { label: string; url: string };
+	/** set when the AI thinks the mail is a scam/phish; the action link is withheld */
+	risk?: { reasons: string[] };
 }

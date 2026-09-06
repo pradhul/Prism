@@ -34,7 +34,11 @@
 					Read
 				</span>
 			{/if}
-			{#if thread.group === 'action' && !thread.done}
+			{#if thread.risk}
+				<span class="rounded-[4px] bg-rose-600 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.06em] text-white uppercase">
+					⚠ Suspicious
+				</span>
+			{:else if thread.group === 'action' && !thread.done}
 				<span class="rounded-[4px] border border-ink/60 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.06em] text-ink uppercase">
 					Reply needed
 				</span>

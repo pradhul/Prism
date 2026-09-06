@@ -26,9 +26,16 @@ it, defaulting to the past month, and explains how it interpreted your query and
 matched.
 
 To feel honest at real-inbox scale, the prototype simulates a mailbox of **~1,400 mails
-(~200 unread)**: 17 hand-authored conversations (`src/lib/data/emails.ts`) plus a deterministic
+(~200 unread)**: hand-authored conversations (`src/lib/data/emails.ts`) plus a deterministic
 generated long tail (`src/lib/data/bulk.ts`). Read/unread, mark-done, and clear-merchant state is
 held in a reactive store (`src/lib/state/inbox.svelte.ts`).
+
+AI summaries are **specific, not generic**: an order mail tells you what was ordered, for how
+much, to which address, and when it arrives. When a mail contains an external link, it surfaces
+as a **button on the summary card** (Track package, Pay $84.20, Open Figma file…). And Prism
+flags **suspicious mail**: two authored phishing examples (a fake customs-fee demand and a fake
+bank-verification threat) are marked ⚠ Suspicious in every view, with the reasons spelled out
+and the dangerous link withheld instead of rendered as a button.
 
 This is an early prototype: light mode only, built for phone-sized viewports first
 (tablet/desktop and native iOS/Android are future work).
@@ -56,6 +63,7 @@ Other scripts:
 pnpm run build   # production build
 pnpm run preview # preview the production build
 pnpm run check   # type-check + svelte-check
+pnpm run gen:icons # regenerate static/ favicon set from src/lib/assets/favicon.svg
 ```
 
 ## Project structure

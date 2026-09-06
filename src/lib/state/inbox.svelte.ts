@@ -131,7 +131,10 @@ export function searchMail(query: string, scopeDays: number): { hits: SearchHit[
 			}
 		}
 
-		if (score > 0) hits.push({ thread, score, reasons: reasons.slice(0, 3) });
+		if (score > 0) {
+			if (thread.risk) reasons.unshift('⚠ flagged suspicious');
+			hits.push({ thread, score, reasons: reasons.slice(0, 3) });
+		}
 	}
 
 	hits.sort((a, b) => b.score - a.score || a.thread.daysAgo - b.thread.daysAgo);

@@ -125,7 +125,41 @@
 						{/each}
 					</div>
 				{/if}
+
 			</button>
+
+			{#if thread.risk}
+				<div class="mt-3 rounded-xl border border-rose-300 bg-rose-50/70 p-3">
+					<p class="font-sans text-[11px] font-bold tracking-[0.08em] text-rose-600 uppercase">⚠ Prism flagged this as suspicious</p>
+					<ul class="mt-1.5 flex flex-col gap-1">
+						{#each thread.risk.reasons as r (r)}
+							<li class="font-sans text-[12px] leading-relaxed text-rose-700/90">— {r}</li>
+						{/each}
+					</ul>
+					{#if thread.actionLink}
+						<p class="mt-2 font-sans text-[11.5px] text-rose-600/80">
+							Link withheld: “{thread.actionLink.label}” → {new URL(thread.actionLink.url).hostname}
+						</p>
+					{/if}
+				</div>
+			{:else if thread.actionLink}
+				<div class="mt-3">
+					<a
+						href={thread.actionLink.url}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="tap-scale inline-flex items-center gap-1.5 rounded-full border border-ink/25 px-3.5 py-2 font-sans text-[12px] font-semibold text-ink"
+					>
+						{thread.actionLink.label}
+						<svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none">
+							<path d="M7 17 17 7m0 0H9m8 0v8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+						</svg>
+					</a>
+					<span class="mt-1 block font-sans text-[10px] text-neutral-400">
+						Link found in this mail · {new URL(thread.actionLink.url).hostname}
+					</span>
+				</div>
+			{/if}
 
 			<div class="mt-7 flex flex-col gap-5">
 				{#each thread.messages as msg (msg.id)}

@@ -40,7 +40,6 @@
 	let leaving = $state(false);
 
 	function back() {
-		if (leaving) return;
 		leaving = true;
 		// history.back() is instant when we came from the stream; goto is the cold-start fallback
 		if (history.length > 1) history.back();
@@ -78,9 +77,10 @@
 		<header class="safe-top relative z-10 flex items-center justify-between px-4 pt-4 pb-3">
 			<button
 				type="button"
+				onpointerdown={() => (leaving = true)}
 				onclick={back}
 				aria-label="Back"
-				class="tap-scale flex h-9 w-9 items-center justify-center rounded-full shadow-glass ring-1 ring-black/5 transition-colors duration-100 active:bg-ink active:text-white {leaving
+				class="tap-scale flex h-9 w-9 items-center justify-center rounded-full shadow-glass ring-1 ring-black/5 transition-colors duration-100 {leaving
 					? 'bg-ink text-white'
 					: 'bg-white'}"
 			>

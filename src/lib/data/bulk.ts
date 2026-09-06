@@ -55,6 +55,16 @@ const goods = [
 	'Bluetooth earbuds',
 	'Ceramic mug'
 ];
+const fashion = [
+	'Slim-fit jeans',
+	'Cotton crew tee ×2',
+	'Running shoes',
+	'Denim jacket',
+	'Ankle socks ×5',
+	'Linen shirt',
+	'Canvas sneakers',
+	'Hooded sweatshirt'
+];
 const dishes = [
 	'Paneer tikka bowl',
 	'Margherita pizza',
@@ -78,8 +88,8 @@ interface Rich {
 
 type RichFn = () => Rich;
 
-function goodsOrder(store: string, currency: string): Rich {
-	const item = pick(goods);
+function goodsOrder(store: string, currency: string, pool: string[] = goods): Rich {
+	const item = pick(pool);
 	const amt = `${currency}${currency === '₹' ? between(199, 2499) : between(9, 89)}`;
 	const addr = pick(addresses);
 	const orderNo = `${between(1000, 9999)}-${between(10, 99)}`;
@@ -170,6 +180,7 @@ const merchants: MerchantSpec[] = [
 	{ name: 'Amazon', initials: 'AZ', avatar: 'bg-amber-100 text-amber-700', count: 120, make: () => goodsOrder('Amazon', '$') },
 	{ name: 'Swiggy', initials: 'SW', avatar: 'bg-orange-100 text-orange-700', count: 96, make: () => foodOrder('Swiggy') },
 	{ name: 'Flipkart', initials: 'FK', avatar: 'bg-blue-100 text-blue-700', count: 60, make: () => goodsOrder('Flipkart', '₹') },
+	{ name: 'Myntra', initials: 'MY', avatar: 'bg-pink-100 text-pink-700', count: 52, make: () => goodsOrder('Myntra', '₹', fashion) },
 	{ name: 'Uber Eats', initials: 'UE', avatar: 'bg-emerald-100 text-emerald-700', count: 48, make: () => foodOrder('Uber Eats') },
 	{ name: 'Zomato', initials: 'ZO', avatar: 'bg-rose-100 text-rose-700', count: 40, make: () => foodOrder('Zomato') },
 	{ name: 'Apple', initials: 'AP', avatar: 'bg-slate-100 text-slate-700', count: 12, make: appleReceipt }

@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { getThread, markRead } from '$lib/state/inbox.svelte';
 	import { categories } from '$lib/data/categories';
+	import Avatar from '$lib/components/shared/Avatar.svelte';
 
 	const thread = $derived(getThread(page.params.id ?? ''));
 
@@ -60,9 +61,7 @@
 				<h1 class="text-[28px] leading-[1.12] font-bold tracking-tight text-ink">{thread.subject}</h1>
 
 				<div class="mt-4 flex items-center gap-2.5">
-					<span class="flex h-9 w-9 items-center justify-center rounded-full bg-ink text-[12px] font-bold text-white">
-						{thread.senderInitials}
-					</span>
+					<Avatar initials={thread.senderInitials} sender={thread.sender} classes="bg-ink text-white" size="md" />
 					<span class="text-sm font-semibold text-ink">{thread.sender}</span>
 				</div>
 

@@ -89,7 +89,7 @@
 			<h1 class="mt-2 font-serif text-[32px] leading-[1.14] font-semibold text-ink">{thread.subject}</h1>
 
 			<div class="mt-4 flex items-center gap-2.5">
-				<Avatar initials={thread.senderInitials} classes={thread.avatar} size="md" />
+				<Avatar initials={thread.senderInitials} sender={thread.sender} classes={thread.avatar} size="md" />
 				<div>
 					<p class="text-[13.5px] font-medium text-ink">{thread.sender}</p>
 					<p class="text-[11.5px] text-neutral-400">{thread.timestamp}</p>

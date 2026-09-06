@@ -166,7 +166,7 @@
 							: ''}"
 					>
 						<div class="flex items-center gap-2.5">
-							<Avatar initials={msg.senderInitials} classes={thread.avatar} size="sm" />
+							<Avatar initials={msg.senderInitials} sender={msg.sender} classes={thread.avatar} size="sm" />
 							<div class="min-w-0 flex-1">
 								<p class="truncate text-[13px] font-semibold text-ink">{msg.sender}</p>
 								<p class="text-[11px] text-neutral-400">{msg.time}</p>

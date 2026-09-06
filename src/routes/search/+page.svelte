@@ -177,7 +177,7 @@
 								: 'opacity-75'}"
 						>
 							<div class="flex items-center gap-2.5">
-								<Avatar initials={hit.thread.senderInitials} classes={hit.thread.avatar} size="sm" />
+								<Avatar initials={hit.thread.senderInitials} sender={hit.thread.sender} classes={hit.thread.avatar} size="sm" />
 								<div class="min-w-0 flex-1">
 									<p class="truncate text-[13px] font-semibold text-ink">{hit.thread.sender}</p>
 								</div>

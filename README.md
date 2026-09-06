@@ -30,6 +30,11 @@ To feel honest at real-inbox scale, the prototype simulates a mailbox of **~1,40
 generated long tail (`src/lib/data/bulk.ts`). Read/unread, mark-done, and clear-merchant state is
 held in a reactive store (`src/lib/state/inbox.svelte.ts`).
 
+Known senders show a **brand mark** on their mail cards (Amazon, Myntra, Swiggy, Flipkart,
+GitHub, Slack, Stripe, Google Drive…) — standing in for the logo a real client would pull from
+the mail itself — so mail is recognizable at a glance; humans keep initials avatars
+(`src/lib/data/senderIcons.ts`).
+
 AI summaries are **specific, not generic**: an order mail tells you what was ordered, for how
 much, to which address, and when it arrives. When a mail contains an external link, it surfaces
 as a **button on the summary card** (Track package, Pay $84.20, Open Figma file…). And Prism

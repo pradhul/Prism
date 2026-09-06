@@ -64,7 +64,7 @@
 	{#if variant === 'hero' || variant === 'feature'}
 		<p class="mt-1.5 line-clamp-2 text-[13.5px] leading-relaxed text-neutral-500">{thread.gist}</p>
 		<div class="mt-2.5 flex items-center gap-2">
-			<Avatar initials={thread.senderInitials} classes={thread.avatar} size="sm" />
+			<Avatar initials={thread.senderInitials} sender={thread.sender} classes={thread.avatar} size="sm" />
 			<span class="text-[12.5px] font-medium text-neutral-600">{thread.sender}</span>
 		</div>
 	{:else}

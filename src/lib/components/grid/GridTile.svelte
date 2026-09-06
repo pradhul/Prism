@@ -1,10 +1,12 @@
 <script lang="ts">
 	import type { Thread } from '$lib/types';
 	import { categories } from '$lib/data/categories';
+	import { senderIcon } from '$lib/data/senderIcons';
 	import { goto } from '$app/navigation';
 
 	let { thread, wide = false }: { thread: Thread; wide?: boolean } = $props();
 	const cat = $derived(categories[thread.category]);
+	const icon = $derived(senderIcon(thread.sender));
 </script>
 
 <button
@@ -42,9 +44,21 @@
 	{/if}
 
 	<div class="mt-3 flex items-center gap-1.5">
-		<span class="flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[9px] font-bold text-neutral-600">
-			{thread.senderInitials}
-		</span>
+		{#if icon}
+			<span
+				class="flex h-5 w-5 items-center justify-center rounded-full ring-1 ring-black/[0.08] {thread.unread ? '' : 'opacity-60 grayscale'}"
+				style="background: {icon.bg}"
+			>
+				<svg viewBox="0 0 24 24" class="h-3.5 w-3.5" role="img" aria-label={icon.title}>
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -- static, hand-authored brand SVG data -->
+					{@html icon.svg}
+				</svg>
+			</span>
+		{:else}
+			<span class="flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[9px] font-bold text-neutral-600">
+				{thread.senderInitials}
+			</span>
+		{/if}
 		<span class="truncate text-[11px] text-neutral-400">{thread.sender}</span>
 		<span class="ml-auto shrink-0 text-[11px] text-neutral-400">{thread.timestamp}</span>
 	</div>

@@ -37,7 +37,7 @@
 			: 'bg-white/45 ring-1 ring-black/[0.04]'}"
 >
 	<div class="flex items-center gap-2.5 {thread.unread ? '' : 'opacity-55'}">
-		<Avatar initials={thread.senderInitials} classes={thread.avatar} size="sm" />
+		<Avatar initials={thread.senderInitials} sender={thread.sender} classes={thread.avatar} size="sm" />
 		<div class="min-w-0 flex-1">
 			<p class="truncate text-[13px] font-semibold text-ink">{thread.sender}</p>
 		</div>

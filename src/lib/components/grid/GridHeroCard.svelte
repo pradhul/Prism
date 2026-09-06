@@ -1,10 +1,12 @@
 <script lang="ts">
 	import type { Thread } from '$lib/types';
 	import { categories } from '$lib/data/categories';
+	import { senderIcon } from '$lib/data/senderIcons';
 	import { goto } from '$app/navigation';
 
 	let { thread }: { thread: Thread } = $props();
 	const cat = $derived(categories[thread.category]);
+	const icon = $derived(senderIcon(thread.sender));
 </script>
 
 <button
@@ -30,9 +32,18 @@
 
 	<div class="mt-4 flex items-center justify-between">
 		<div class="flex items-center gap-2">
-			<span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-[11px] font-semibold">
-				{thread.senderInitials}
-			</span>
+			{#if icon}
+				<span class="flex h-7 w-7 items-center justify-center rounded-full" style="background: {icon.bg}">
+					<svg viewBox="0 0 24 24" class="h-4 w-4" role="img" aria-label={icon.title}>
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -- static, hand-authored brand SVG data -->
+						{@html icon.svg}
+					</svg>
+				</span>
+			{:else}
+				<span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-[11px] font-semibold">
+					{thread.senderInitials}
+				</span>
+			{/if}
 			<span class="text-[13px] font-medium text-white/85">{thread.sender}</span>
 		</div>
 		<span class="rounded-full border border-white/25 px-2.5 py-1 text-[11px] font-medium">{cat.label}</span>

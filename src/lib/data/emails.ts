@@ -32,13 +32,14 @@ export const curatedThreads: Thread[] = [
 		gist: 'Client needs a new Q3 delivery timeline and formal approval on the slide deck before you present — by end of day.',
 		summary: [
 			'Client requested an updated timeline for the Q3 metrics delivery.',
-			'Approval is needed on the final slide deck attached.',
+			'Approval is needed on the final slide deck attached (Q3_Metrics_v2.pdf, 18 slides).',
 			'Needs a response by EOD today to stay on schedule.'
 		],
+		actionLink: { label: 'Open slide deck', url: 'https://drive.example.com/q3-metrics-v2' },
 		sender: 'Marcus Vance',
 		senderInitials: 'MV',
 		avatar: avatars.rose,
-		tags: ['Deadline today'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -88,10 +89,11 @@ export const curatedThreads: Thread[] = [
 			'Retention on the new onboarding flow outperformed projections.',
 			'Full board review needs your sign-off on the final Q3 numbers.'
 		],
+		actionLink: { label: 'Open full report', url: 'https://drive.example.com/q3-vc-report' },
 		sender: 'Sarah Jenkins',
 		senderInitials: 'SJ',
 		avatar: avatars.violet,
-		tags: ['Investments'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -128,10 +130,11 @@ export const curatedThreads: Thread[] = [
 			'Design team is leaning toward variant B for its shorter path to value.',
 			'Feedback requested by Thursday standup — you read this but haven’t replied yet.'
 		],
+		actionLink: { label: 'Open Figma file', url: 'https://figma.example.com/onboarding-flows' },
 		sender: 'Design Team',
 		senderInitials: 'DT',
 		avatar: avatars.blue,
-		tags: ['Design'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -170,7 +173,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Marketing',
 		senderInitials: 'MK',
 		avatar: avatars.amber,
-		tags: ['Marketing'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -246,7 +249,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'IT Ops',
 		senderInitials: 'IT',
 		avatar: avatars.slate,
-		tags: ['System'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -275,12 +278,17 @@ export const curatedThreads: Thread[] = [
 		merchant: 'Subscriptions',
 		timestamp: '06:02',
 		timeGroup: 'Today',
-		gist: 'Monthly Prism Pro subscription renewed — $12.00 charged to your card ending 4471.',
-		summary: ['Subscription renewed for another month.', 'Card ending 4471 was charged $12.00.'],
+		gist: 'Prism Pro renewed for November — $12.00 on Visa ···4471, next billing December 4.',
+		summary: [
+			'Prism Pro monthly plan renewed for November.',
+			'$12.00 charged to Visa ending 4471.',
+			'Next billing date: December 4 — cancel any time before then.'
+		],
+		actionLink: { label: 'View invoice', url: 'https://billing.example.com/prism/inv-8841' },
 		sender: 'Stripe · Prism',
 		senderInitials: 'ST',
 		avatar: avatars.indigo,
-		tags: ['Receipt'],
+		tags: ['Finance'],
 		messages: [
 			{
 				id: 'm1',
@@ -306,12 +314,17 @@ export const curatedThreads: Thread[] = [
 		merchant: 'Amazon',
 		timestamp: '07:40',
 		timeGroup: 'Today',
-		gist: 'Desk lamp and cables are on the way — arriving Thursday via standard shipping.',
-		summary: ['Order #4471-99 has shipped.', 'Estimated delivery: Thursday.'],
+		gist: 'Desk lamp (matte black) + 2× USB-C cables, $43.90 — shipped to Home, arriving Thursday by 8pm.',
+		summary: [
+			'Order #4471-99: desk lamp (matte black) and 2× USB-C cable — $43.90 total.',
+			'Shipping to Home — 14 Rosewood Lane, Apt 3B.',
+			'Arriving Thursday by 8pm via standard shipping.'
+		],
+		actionLink: { label: 'Track package', url: 'https://amazon.example.com/track/4471-99' },
 		sender: 'Amazon',
 		senderInitials: 'AZ',
 		avatar: avatars.amber,
-		tags: ['Delivery'],
+		tags: ['Shopping'],
 		messages: [
 			{
 				id: 'm1',
@@ -342,10 +355,11 @@ export const curatedThreads: Thread[] = [
 			'No plan selection on file yet for next year.',
 			'Takes about 10 minutes to complete in the HR portal.'
 		],
+		actionLink: { label: 'Open enrollment portal', url: 'https://hr.example.com/benefits/enroll' },
 		sender: 'People Team',
 		senderInitials: 'PT',
 		avatar: avatars.rose,
-		tags: ['Deadline Friday'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -419,10 +433,11 @@ export const curatedThreads: Thread[] = [
 			'If this wasn’t you, secure your account immediately.',
 			'Two-factor authentication was not required for this sign-in.'
 		],
+		actionLink: { label: 'Review activity', url: 'https://bank.example.com/security/activity' },
 		sender: 'Security Alerts',
 		senderInitials: 'SA',
 		avatar: avatars.rose,
-		tags: ['Security'],
+		tags: ['Finance'],
 		messages: [
 			{
 				id: 'm1',
@@ -460,7 +475,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Coach Dana',
 		senderInitials: 'CD',
 		avatar: avatars.teal,
-		tags: ['Fitness'],
+		tags: ['Personal'],
 		messages: [
 			{
 				id: 'm1',
@@ -494,10 +509,11 @@ export const curatedThreads: Thread[] = [
 			'Roundup of five interface patterns from recent product launches.',
 			'Includes a section on ambient AI and editorial-style content UIs.'
 		],
+		actionLink: { label: 'Read in browser', url: 'https://theinterface.example.com/issue-142' },
 		sender: 'The Interface',
 		senderInitials: 'TI',
 		avatar: avatars.blue,
-		tags: ['Newsletter'],
+		tags: [],
 		messages: [
 			{
 				id: 'm1',
@@ -533,7 +549,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Jordan (Recruiter)',
 		senderInitials: 'JR',
 		avatar: avatars.violet,
-		tags: ['Opportunity'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -567,6 +583,7 @@ export const curatedThreads: Thread[] = [
 			'Departure time unchanged at 7:45am.',
 			'Updated boarding pass is attached.'
 		],
+		actionLink: { label: 'View boarding pass', url: 'https://airline.example.com/boarding/208' },
 		sender: 'Airline Alerts',
 		senderInitials: 'AA',
 		avatar: avatars.rose,
@@ -602,10 +619,11 @@ export const curatedThreads: Thread[] = [
 		timeGroup: 'Earlier',
 		gist: '$84.20 due November 5th — autopay is off, you opened this 3 days ago but haven’t paid yet.',
 		summary: ['Amount due: $84.20.', 'Due date: November 5th.', 'Autopay is currently disabled on this account.'],
+		actionLink: { label: 'Pay $84.20', url: 'https://citypower.example.com/pay' },
 		sender: 'City Power & Light',
 		senderInitials: 'CP',
 		avatar: avatars.amber,
-		tags: ['Bill'],
+		tags: ['Finance'],
 		messages: [
 			{
 				id: 'm1',
@@ -639,7 +657,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Nina (Manager)',
 		senderInitials: 'NM',
 		avatar: avatars.indigo,
-		tags: ['1:1'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -673,10 +691,11 @@ export const curatedThreads: Thread[] = [
 			'Final headcount is needed for catering.',
 			'You can update meal preference in the same form.'
 		],
+		actionLink: { label: 'Open RSVP form', url: 'https://rsvp.example.com/maya-and-tom' },
 		sender: 'Maya & Tom',
 		senderInitials: 'MT',
 		avatar: avatars.teal,
-		tags: ['Wedding'],
+		tags: ['Personal'],
 		messages: [
 			{
 				id: 'm1',
@@ -688,6 +707,100 @@ export const curatedThreads: Thread[] = [
 				body: [
 					'Quick reminder that RSVPs are due this Sunday at midnight!',
 					'The venue needs our final headcount for catering. If you haven’t already, please confirm and pick a meal preference.'
+				]
+			}
+		]
+	},
+	{
+		id: 'fake-delivery-fee',
+		subject: 'Your package is on hold — customs fee required',
+		group: 'action',
+		category: 'urgent',
+		priority: 'high',
+		unread: true,
+		done: false,
+		archived: false,
+		daysAgo: 0,
+		curated: true,
+		timestamp: '04:12',
+		timeGroup: 'Today',
+		gist: 'Claims a parcel is stuck until you pay a ₹49 “customs fee” — Prism thinks this is a scam.',
+		summary: [
+			'Says a package can’t be delivered until you pay ₹49 within 24 hours.',
+			'The payment link goes to indiapost-secure-verify.info — not the real India Post domain.',
+			'You have no pending shipment matching this tracking number.'
+		],
+		sender: 'India Post',
+		senderInitials: 'IP',
+		avatar: avatars.rose,
+		tags: [],
+		actionLink: { label: 'Pay customs fee', url: 'http://indiapost-secure-verify.info/pay' },
+		risk: {
+			reasons: [
+				'Sender address is noreply@indiapost-secure-verify.info, which is not India Post',
+				'Creates false urgency with a 24-hour payment deadline',
+				'No shipment in your mail history matches tracking number IN88291'
+			]
+		},
+		messages: [
+			{
+				id: 'm1',
+				sender: 'India Post',
+				senderInitials: 'IP',
+				avatar: avatars.rose,
+				time: 'Today, 04:12',
+				highlighted: true,
+				body: [
+					'Dear customer, your package IN88291 is on hold at our facility.',
+					'A customs fee of ₹49 is required to release delivery. Pay within 24 hours or the package will be returned to sender.',
+					'Click the secure link to complete payment.'
+				]
+			}
+		]
+	},
+	{
+		id: 'fake-bank-verify',
+		subject: 'Account suspended: verify your details within 24 hours',
+		group: 'action',
+		category: 'urgent',
+		priority: 'high',
+		unread: true,
+		done: false,
+		archived: false,
+		daysAgo: 1,
+		curated: true,
+		timestamp: 'Yesterday',
+		timeGroup: 'Yesterday',
+		gist: 'Threatens account suspension and asks for your card number and PIN — a classic phish. Prism withheld the link.',
+		summary: [
+			'Claims your bank account is suspended and demands verification in 24 hours.',
+			'Sender is support@secure-bank-alerts.co — not your bank’s domain.',
+			'Asks for your full card number and PIN, which no bank ever does.'
+		],
+		sender: 'SecureBank Support',
+		senderInitials: 'SB',
+		avatar: avatars.slate,
+		tags: [],
+		actionLink: { label: 'Verify account', url: 'http://secure-bank-alerts.co/verify' },
+		risk: {
+			reasons: [
+				'Sender domain secure-bank-alerts.co does not belong to your bank',
+				'Threatens suspension to rush you into acting',
+				'Requests full card number and PIN — banks never ask for these'
+			]
+		},
+		messages: [
+			{
+				id: 'm1',
+				sender: 'SecureBank Support',
+				senderInitials: 'SB',
+				avatar: avatars.slate,
+				time: 'Yesterday, 21:47',
+				highlighted: true,
+				body: [
+					'Dear valued customer,',
+					'Unusual activity has been detected and your account has been temporarily suspended. Verify your identity within 24 hours to avoid permanent closure.',
+					'You will need your full card number, expiry and PIN to complete verification.'
 				]
 			}
 		]

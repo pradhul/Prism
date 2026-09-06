@@ -2,7 +2,12 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import PrismMark from '$lib/components/shared/PrismMark.svelte';
-	import { concepts } from '$lib/data/concepts';
+
+	const cardSwatches = [
+		'from-violet-400 via-sky-400 to-teal-300',
+		'from-amber-300 via-rose-300 to-violet-300',
+		'from-teal-300 via-sky-300 to-indigo-300'
+	];
 
 	const error = $derived(page.url.searchParams.get('error'));
 	const signedIn = $derived(Boolean(page.data.user));
@@ -35,9 +40,9 @@
 
 	<div class="flex flex-1 flex-col items-center justify-center gap-8 py-8">
 		<div class="relative h-40 w-full max-w-xs">
-			{#each concepts as concept, i (concept.id)}
+			{#each cardSwatches as swatch, i (swatch)}
 				<div
-					class="absolute inset-x-6 top-2 h-32 rounded-[26px] bg-gradient-to-br shadow-glass ring-1 ring-black/5 {concept.swatch}"
+					class="absolute inset-x-6 top-2 h-32 rounded-[26px] bg-gradient-to-br shadow-glass ring-1 ring-black/5 {swatch}"
 					style={`transform: translateY(${i * 10}px) rotate(${(i - 1) * 6}deg) scale(${1 - i * 0.04}); z-index: ${
 						10 - i
 					}; opacity: ${1 - i * 0.12};`}
@@ -50,8 +55,8 @@
 				Your inbox has a lot to say.
 			</h1>
 			<p class="max-w-[19rem] text-[15px] leading-relaxed text-neutral-500">
-				Connect Gmail and Prism will read recent mail, group it by what it needs from you, and open
-				the timeline Stream first.
+				Connect Gmail and Prism will read recent mail, group it by what it needs from you, and
+				stream it — no folders required.
 			</p>
 			{#if errorMessage}
 				<p class="max-w-[19rem] rounded-2xl bg-rose-50 px-3 py-2 text-[13px] text-rose-600 ring-1 ring-rose-100">
@@ -79,10 +84,7 @@
 					/>
 				</svg>
 			</button>
-			<a
-				href="/api/auth/logout"
-				class="tap-scale text-center text-[13px] font-medium text-neutral-500"
-			>
+			<a href="/api/auth/logout" class="tap-scale text-center text-[13px] font-medium text-neutral-500">
 				Sign out ({page.data.user?.email})
 			</a>
 		{:else}
@@ -112,13 +114,13 @@
 			</a>
 			<button
 				type="button"
-				onclick={() => goto('/choose')}
+				onclick={() => goto('/stream')}
 				class="tap-scale rounded-full bg-white py-3.5 text-[14px] font-semibold text-ink ring-1 ring-black/10"
 			>
 				Try demo inbox
 			</button>
 			<p class="text-center text-xs text-neutral-400">
-				Gmail access is read-only. Demo mode still uses mock mail.
+				Gmail access is read-only. Demo mode uses mock mail.
 			</p>
 		{/if}
 	</div>

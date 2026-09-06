@@ -1,15 +1,10 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { searchMail, type SearchHit, type SearchInterpretation } from '$lib/state/inbox.svelte';
 	import Avatar from '$lib/components/shared/Avatar.svelte';
 	import { categories } from '$lib/data/categories';
 
-	const from = $derived(
-		['stream', 'grid', 'arc'].includes(page.url.searchParams.get('from') ?? '')
-			? (page.url.searchParams.get('from') as string)
-			: 'stream'
-	);
+	const from = 'stream';
 
 	let query = $state('');
 	let scopeDays = $state(30);
@@ -177,7 +172,7 @@
 								: 'opacity-75'}"
 						>
 							<div class="flex items-center gap-2.5">
-								<Avatar initials={hit.thread.senderInitials} classes={hit.thread.avatar} size="sm" />
+								<Avatar initials={hit.thread.senderInitials} sender={hit.thread.sender} classes={hit.thread.avatar} size="sm" />
 								<div class="min-w-0 flex-1">
 									<p class="truncate text-[13px] font-semibold text-ink">{hit.thread.sender}</p>
 								</div>

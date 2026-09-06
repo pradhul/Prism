@@ -1,9 +1,11 @@
 <script lang="ts">
 	import type { Thread } from '$lib/types';
 	import { clearMerchant } from '$lib/state/inbox.svelte';
+	import { senderIcon } from '$lib/data/senderIcons';
 	import { goto } from '$app/navigation';
 
 	let { merchant, items }: { merchant: string; items: Thread[] } = $props();
+	const icon = $derived(senderIcon(merchant));
 
 	let showAll = $state(false);
 	const visible = $derived(showAll ? items : items.slice(0, 3));
@@ -12,9 +14,18 @@
 
 <div class="overflow-hidden rounded-[20px] bg-white/70 ring-1 ring-black/[0.04]">
 	<div class="flex items-center gap-2 px-4 py-3">
-		<span class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-[10px] font-bold text-amber-700">
-			{merchant.slice(0, 2).toUpperCase()}
-		</span>
+		{#if icon}
+			<span class="flex h-7 w-7 items-center justify-center rounded-full ring-1 ring-black/[0.08]" style="background: {icon.bg}">
+				<svg viewBox="0 0 24 24" class="h-4 w-4" role="img" aria-label={icon.title}>
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -- static, hand-authored brand SVG data -->
+					{@html icon.svg}
+				</svg>
+			</span>
+		{:else}
+			<span class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-[10px] font-bold text-amber-700">
+				{merchant.slice(0, 2).toUpperCase()}
+			</span>
+		{/if}
 		<div class="min-w-0 flex-1">
 			<p class="text-[13px] font-semibold text-ink">{merchant}</p>
 			<p class="text-[11px] text-neutral-400">
@@ -35,7 +46,7 @@
 		{#each visible as t (t.id)}
 			<button
 				type="button"
-				onclick={() => goto(`/stream/${t.id}`)}
+				onclick={() => goto(`/stream/${encodeURIComponent(t.id)}`)}
 				class="flex items-center gap-2.5 px-4 py-2.5 text-left {t.unread ? '' : 'opacity-50'}"
 			>
 				{#if t.unread}

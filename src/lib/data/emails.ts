@@ -39,7 +39,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Marcus Vance',
 		senderInitials: 'MV',
 		avatar: avatars.rose,
-		tags: ['Deadline today'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -93,7 +93,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Sarah Jenkins',
 		senderInitials: 'SJ',
 		avatar: avatars.violet,
-		tags: ['Investments'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -134,7 +134,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Design Team',
 		senderInitials: 'DT',
 		avatar: avatars.blue,
-		tags: ['Design'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -173,7 +173,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Marketing',
 		senderInitials: 'MK',
 		avatar: avatars.amber,
-		tags: ['Marketing'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -249,7 +249,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'IT Ops',
 		senderInitials: 'IT',
 		avatar: avatars.slate,
-		tags: ['System'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -288,7 +288,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Stripe · Prism',
 		senderInitials: 'ST',
 		avatar: avatars.indigo,
-		tags: ['Receipt'],
+		tags: ['Finance'],
 		messages: [
 			{
 				id: 'm1',
@@ -324,7 +324,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Amazon',
 		senderInitials: 'AZ',
 		avatar: avatars.amber,
-		tags: ['Delivery'],
+		tags: ['Shopping'],
 		messages: [
 			{
 				id: 'm1',
@@ -359,7 +359,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'People Team',
 		senderInitials: 'PT',
 		avatar: avatars.rose,
-		tags: ['Deadline Friday'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -437,7 +437,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Security Alerts',
 		senderInitials: 'SA',
 		avatar: avatars.rose,
-		tags: ['Security'],
+		tags: ['Finance'],
 		messages: [
 			{
 				id: 'm1',
@@ -475,7 +475,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Coach Dana',
 		senderInitials: 'CD',
 		avatar: avatars.teal,
-		tags: ['Fitness'],
+		tags: ['Personal'],
 		messages: [
 			{
 				id: 'm1',
@@ -513,7 +513,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'The Interface',
 		senderInitials: 'TI',
 		avatar: avatars.blue,
-		tags: ['Newsletter'],
+		tags: [],
 		messages: [
 			{
 				id: 'm1',
@@ -549,7 +549,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Jordan (Recruiter)',
 		senderInitials: 'JR',
 		avatar: avatars.violet,
-		tags: ['Opportunity'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -623,7 +623,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'City Power & Light',
 		senderInitials: 'CP',
 		avatar: avatars.amber,
-		tags: ['Bill'],
+		tags: ['Finance'],
 		messages: [
 			{
 				id: 'm1',
@@ -657,7 +657,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Nina (Manager)',
 		senderInitials: 'NM',
 		avatar: avatars.indigo,
-		tags: ['1:1'],
+		tags: ['Work'],
 		messages: [
 			{
 				id: 'm1',
@@ -695,7 +695,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'Maya & Tom',
 		senderInitials: 'MT',
 		avatar: avatars.teal,
-		tags: ['Wedding'],
+		tags: ['Personal'],
 		messages: [
 			{
 				id: 'm1',
@@ -733,7 +733,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'India Post',
 		senderInitials: 'IP',
 		avatar: avatars.rose,
-		tags: ['Flagged'],
+		tags: [],
 		actionLink: { label: 'Pay customs fee', url: 'http://indiapost-secure-verify.info/pay' },
 		risk: {
 			reasons: [
@@ -780,7 +780,7 @@ export const curatedThreads: Thread[] = [
 		sender: 'SecureBank Support',
 		senderInitials: 'SB',
 		avatar: avatars.slate,
-		tags: ['Flagged'],
+		tags: [],
 		actionLink: { label: 'Verify account', url: 'http://secure-bank-alerts.co/verify' },
 		risk: {
 			reasons: [

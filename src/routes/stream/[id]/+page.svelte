@@ -2,6 +2,14 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { getThread, markRead, markDone } from '$lib/state/inbox.svelte';
+	import {
+		effectiveTags,
+		tagMeta,
+		tagSource,
+		tagStore,
+		toggleThreadTag,
+		createTag
+	} from '$lib/state/organize.svelte';
 	import { groupMeta } from '$lib/data/groups';
 	import { categories } from '$lib/data/categories';
 	import Avatar from '$lib/components/shared/Avatar.svelte';
@@ -11,6 +19,17 @@
 
 	let draft = $state('');
 	let revealLink = $state(false);
+	let tagSheet = $state(false);
+	let newTag = $state('');
+
+	function addNewTag() {
+		if (!thread) return;
+		const tag = createTag(newTag);
+		if (tag) {
+			toggleThreadTag(thread.id, tag.name);
+			newTag = '';
+		}
+	}
 
 	const linkHost = $derived(thread?.actionLink ? new URL(thread.actionLink.url).hostname : '');
 
@@ -85,7 +104,30 @@
 		</header>
 
 		<div class="no-scrollbar flex-1 overflow-y-auto px-4 pb-4">
-			<h1 class="px-1 pt-1 pb-3 text-[19px] font-semibold leading-snug text-ink">{thread.subject}</h1>
+			<h1 class="px-1 pt-1 pb-2 text-[19px] font-semibold leading-snug text-ink">{thread.subject}</h1>
+
+			<div class="flex flex-wrap items-center gap-1.5 px-1 pb-3">
+				{#each effectiveTags(thread) as tag (tag)}
+					<span class="flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 {tagMeta(tag).pill}">
+						<svg viewBox="0 0 24 24" class="h-3 w-3" fill="none">
+							<path
+								d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"
+								stroke="currentColor"
+								stroke-width="2.2"
+								stroke-linejoin="round"
+							/>
+						</svg>
+						{tag}
+					</span>
+				{/each}
+				<button
+					type="button"
+					onclick={() => (tagSheet = true)}
+					class="tap-scale flex items-center gap-1 rounded-full border border-dashed border-neutral-300 px-2.5 py-1 text-[11px] font-semibold text-neutral-500"
+				>
+					+ Tag
+				</button>
+			</div>
 
 			<div class="relative overflow-hidden rounded-[22px] bg-white p-4 shadow-glass ring-1 ring-black/[0.04]">
 				<div class="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-teal-400 via-sky-400 to-rose-400"></div>
@@ -236,5 +278,69 @@
 				</button>
 			</div>
 		</div>
+
+		{#if tagSheet}
+			<div class="fixed inset-0 z-50 flex flex-col justify-end">
+				<button type="button" aria-label="Close tags" class="absolute inset-0 bg-ink/30 backdrop-blur-[2px]" onclick={() => (tagSheet = false)}></button>
+				<div class="safe-bottom relative rounded-t-[26px] bg-white px-5 pt-4 pb-6 shadow-glass-lg">
+					<div class="mx-auto mb-3 h-1 w-10 rounded-full bg-neutral-200"></div>
+					<div class="mb-1 flex items-center justify-between">
+						<h3 class="text-[15px] font-semibold text-ink">Tags for this mail</h3>
+						<button type="button" onclick={() => (tagSheet = false)} class="tap-scale text-[13px] font-semibold text-violet-500">Done</button>
+					</div>
+					<p class="mb-3 text-[11.5px] text-neutral-400">Tap to add or remove. Tags applied by a rule stay until the rule is changed.</p>
+
+					<div class="flex flex-col gap-1">
+						{#each tagStore.tags as tag (tag.name)}
+							{@const src = tagSource(thread, tag.name)}
+							<button
+								type="button"
+								disabled={src === 'rule'}
+								onclick={() => toggleThreadTag(thread.id, tag.name)}
+								class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left {src ? 'bg-neutral-50' : ''}"
+							>
+								<span class="h-2.5 w-2.5 shrink-0 rounded-full {tag.dot}"></span>
+								<span class="flex-1 text-[13.5px] font-medium text-ink">{tag.name}</span>
+								{#if src === 'rule'}
+									<span class="text-[10.5px] font-medium text-neutral-400">via rule</span>
+								{/if}
+								<span
+									class="flex h-5 w-5 items-center justify-center rounded-full {src
+										? 'bg-violet-500 text-white'
+										: 'ring-1 ring-neutral-300'}"
+								>
+									{#if src}
+										<svg viewBox="0 0 24 24" class="h-3 w-3" fill="none">
+											<path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+										</svg>
+									{/if}
+								</span>
+							</button>
+						{/each}
+					</div>
+
+					<form
+						class="mt-3 flex items-center gap-2 border-t border-neutral-100 pt-3"
+						onsubmit={(e) => {
+							e.preventDefault();
+							addNewTag();
+						}}
+					>
+						<input
+							bind:value={newTag}
+							placeholder="New tag name…"
+							class="min-w-0 flex-1 rounded-full bg-neutral-100 px-4 py-2.5 text-[13px] text-ink placeholder:text-neutral-400 focus:outline-none"
+						/>
+						<button
+							type="submit"
+							disabled={!newTag.trim()}
+							class="tap-scale shrink-0 rounded-full bg-ink px-4 py-2.5 text-[12.5px] font-semibold text-white disabled:opacity-30"
+						>
+							Create & add
+						</button>
+					</form>
+				</div>
+			</div>
+		{/if}
 	</div>
 {/if}

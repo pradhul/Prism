@@ -1,24 +1,23 @@
 # Prism — Inbox, reimagined
 
-Prism is a mobile-first web app that rethinks what an email inbox can look like. Instead of one
-more folder-and-list client, it explores **three distinct, AI-native inbox experiences** and lets
-you switch between them freely:
+Prism is a mobile-first web app that rethinks what an email inbox can look like. The current
+iteration focuses on one experience, **the Contextual Stream** (`/stream`): mail grouped by what
+it needs from you, each group with its own interaction — **Needs Action** (read or unread, still
+pending — mark ✓ done to dismiss), **Orders & Deliveries** (sub-grouped by store with one-tap
+"Clear all" per merchant), **Catch Up** (newsletters & FYI with read-time estimates and
+"mark all read"), and **Everything Else**. Read mail stays visible, greyed out.
 
-1. **The Contextual Stream** (`/stream`) — Timeline & Bubbles. Mail is grouped by what it needs
-   from you, and every group has its own interaction: **Needs Action** (read or unread, still
-   pending — mark ✓ done to dismiss), **Orders & Deliveries** (sub-grouped by store with one-tap
-   "Clear all" per merchant), **Catch Up** (newsletters & FYI with read-time estimates and
-   "mark all read"), and **Everything Else**. Read mail stays visible, greyed out.
-2. **The Priority Grid** (`/grid`) — Card-based navigation. A bento-style dashboard: one bold
-   hero card for whatever AI thinks matters most, and a grid of smaller monochrome tiles for
-   everything else. Feels like a personalized news feed.
-3. **The Focused Arc** (`/arc`) — Gestural & minimalist. An editorial, serif-heavy "brief" you
-   read one story at a time, with a bottom-anchored pill dock ("the Arc") for swiping between
-   Work / Personal / Urgent / Updates, plus horizontal swipe gestures on the reading canvas.
+The flow is: **splash screen → simple start page → the Stream.** (Two earlier alternative
+concepts — a card grid and a gestural reader — were removed from the app for now to keep it
+focused; they live in git history.)
 
-The flow is: **splash screen → simple start page → pick a concept → inbox.** Every inbox screen
-has a small switcher so you can jump between all three concepts (or back to the start) at any
-time — handy for comparing them side by side.
+**Tags & rules** (`/manage`): Gmail-style tags show as small pills next to the New/Read state on
+every mail. Tags can be created inline, pinned to any mail from its detail view ("+ Tag"), and
+managed centrally. Rules are shown in plain language ("When mail arrives from Swiggy, Zomato or
+Uber Eats → tag it Food"), each with a live match count, an on/off toggle (pills update
+everywhere instantly), delete, and a small two-field builder for new rules. Built-in AI behaviors
+(intent grouping, per-store order stacks, 14-day action pinning, phishing flags) are listed on
+the same screen so the inbox is never a black box.
 
 Every view also links to **AI search** (`/search`): describe a mail loosely ("the pdf marcus
 sent about the timeline", "amazon refund last month") and Prism scores the whole mailbox against
@@ -78,26 +77,23 @@ src/
   routes/
     +page.svelte          # splash screen
     start/                 # simple start page
-    choose/                # pick one of the 3 concepts
     stream/                # Contextual Stream: list + /stream/[id] thread view
-    grid/                  # Priority Grid: dashboard + /grid/[id] detail view
-    arc/                   # Focused Arc: "The Prism Brief" list + /arc/[id] focused reader
     search/                # AI search over the whole mailbox
+    manage/                # Tags & Rules management
   lib/
     components/
-      shared/              # Avatar, ConceptSwitcher, PrismMark (logo)
-      stream/ grid/ arc/    # concept-specific building blocks
+      shared/              # Avatar, PrismMark (logo)
+      stream/               # Stream building blocks
     data/
       emails.ts            # hand-authored demo conversations
       bulk.ts              # deterministic ~1,400-mail long tail
-      categories.ts groups.ts concepts.ts
+      senderIcons.ts       # brand marks for known senders
+      categories.ts groups.ts
     state/
       inbox.svelte.ts      # reactive inbox: read/done/archive state + AI search scoring
+      organize.svelte.ts   # tags + rules: create/delete, toggle, effective-tag computation
     types.ts
 ```
-
-All three concepts read from the **same mock dataset** — the differentiator is purely the UI/UX,
-per the brief that "the UI is the main issue."
 
 ## Notes / assumptions for this first iteration
 

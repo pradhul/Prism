@@ -3,7 +3,6 @@
 	import { groupMeta } from '$lib/data/groups';
 	import StreamBubble from '$lib/components/stream/StreamBubble.svelte';
 	import OrderMerchantGroup from '$lib/components/stream/OrderMerchantGroup.svelte';
-	import ConceptSwitcher from '$lib/components/shared/ConceptSwitcher.svelte';
 	import PrismMark from '$lib/components/shared/PrismMark.svelte';
 	import { goto } from '$app/navigation';
 
@@ -65,7 +64,7 @@
 		<div class="flex items-center gap-2">
 			<button
 				type="button"
-				onclick={() => goto('/search?from=stream')}
+				onclick={() => goto('/search')}
 				aria-label="AI search"
 				class="glass tap-scale flex h-9 w-9 items-center justify-center rounded-full text-ink shadow-glass ring-1 ring-black/5"
 			>
@@ -74,7 +73,22 @@
 					<path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
 				</svg>
 			</button>
-			<ConceptSwitcher current="stream" />
+			<button
+				type="button"
+				onclick={() => goto('/manage')}
+				aria-label="Tags and rules"
+				class="glass tap-scale flex h-9 w-9 items-center justify-center rounded-full text-ink shadow-glass ring-1 ring-black/5"
+			>
+				<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none">
+					<path
+						d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"
+						stroke="currentColor"
+						stroke-width="1.8"
+						stroke-linejoin="round"
+					/>
+					<circle cx="7.5" cy="7.5" r="0.6" fill="currentColor" stroke="currentColor" />
+				</svg>
+			</button>
 		</div>
 	</header>
 

@@ -1,15 +1,10 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { searchMail, type SearchHit, type SearchInterpretation } from '$lib/state/inbox.svelte';
 	import Avatar from '$lib/components/shared/Avatar.svelte';
 	import { categories } from '$lib/data/categories';
 
-	const from = $derived(
-		['stream', 'grid', 'arc'].includes(page.url.searchParams.get('from') ?? '')
-			? (page.url.searchParams.get('from') as string)
-			: 'stream'
-	);
+	const from = 'stream';
 
 	let query = $state('');
 	let scopeDays = $state(30);

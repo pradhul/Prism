@@ -1,14 +1,14 @@
 <script lang="ts">
 	import type { Thread } from '$lib/types';
 	import Avatar from '$lib/components/shared/Avatar.svelte';
-	import { categories } from '$lib/data/categories';
 	import { markDone } from '$lib/state/inbox.svelte';
+	import { effectiveTags, tagMeta } from '$lib/state/organize.svelte';
 	import { goto } from '$app/navigation';
 
 	let { thread }: { thread: Thread } = $props();
 	let expanded = $state(false);
 
-	const cat = $derived(categories[thread.category]);
+	const tags = $derived(effectiveTags(thread));
 
 	function open() {
 		goto(`/stream/${thread.id}`);
@@ -42,12 +42,28 @@
 			<p class="truncate text-[13px] font-semibold text-ink">{thread.sender}</p>
 		</div>
 		{#if thread.unread}
-			<span class="flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-600">
+			<span class="flex shrink-0 items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-600">
 				<span class="h-1.5 w-1.5 rounded-full bg-violet-500"></span>
 				New
 			</span>
 		{:else}
-			<span class="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-400">Read</span>
+			<span class="shrink-0 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-400">Read</span>
+		{/if}
+		{#each tags.slice(0, 2) as tag (tag)}
+			<span class="flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 {tagMeta(tag).pill}">
+				<svg viewBox="0 0 24 24" class="h-2.5 w-2.5" fill="none">
+					<path
+						d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"
+						stroke="currentColor"
+						stroke-width="2.4"
+						stroke-linejoin="round"
+					/>
+				</svg>
+				{tag}
+			</span>
+		{/each}
+		{#if tags.length > 2}
+			<span class="shrink-0 text-[10px] font-semibold text-neutral-400">+{tags.length - 2}</span>
 		{/if}
 		<span class="shrink-0 text-[11px] text-neutral-400">{thread.timestamp}</span>
 	</div>
@@ -77,8 +93,6 @@
 	{/if}
 
 	<div class="mt-3 flex items-center gap-1.5">
-		<span class="rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 {cat.tint}">{cat.label}</span>
-
 		{#if thread.risk}
 			<span class="flex items-center gap-1 rounded-full bg-rose-500 px-2.5 py-1 text-[11px] font-bold text-white">
 				⚠ Suspicious

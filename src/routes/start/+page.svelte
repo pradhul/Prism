@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import PrismMark from '$lib/components/shared/PrismMark.svelte';
-	import { concepts } from '$lib/data/concepts';
+
+	const cardSwatches = [
+		'from-violet-400 via-sky-400 to-teal-300',
+		'from-amber-300 via-rose-300 to-violet-300',
+		'from-teal-300 via-sky-300 to-indigo-300'
+	];
 </script>
 
 <svelte:head>
@@ -16,9 +21,9 @@
 
 	<div class="flex flex-1 flex-col items-center justify-center gap-8 py-8">
 		<div class="relative h-40 w-full max-w-xs">
-			{#each concepts as concept, i (concept.id)}
+			{#each cardSwatches as swatch, i (swatch)}
 				<div
-					class="absolute inset-x-6 top-2 h-32 rounded-[26px] bg-gradient-to-br shadow-glass ring-1 ring-black/5 {concept.swatch}"
+					class="absolute inset-x-6 top-2 h-32 rounded-[26px] bg-gradient-to-br shadow-glass ring-1 ring-black/5 {swatch}"
 					style={`transform: translateY(${i * 10}px) rotate(${(i - 1) * 6}deg) scale(${1 - i * 0.04}); z-index: ${
 						10 - i
 					}; opacity: ${1 - i * 0.12};`}
@@ -31,8 +36,8 @@
 				Your inbox has a lot to say.
 			</h1>
 			<p class="max-w-[19rem] text-[15px] leading-relaxed text-neutral-500">
-				Prism reads every thread so you don't have to — then shows it to you in whichever shape
-				makes sense for your brain. No folders required.
+				Prism reads every thread so you don't have to — then streams it to you grouped by what it
+				needs from you. No folders required.
 			</p>
 		</div>
 	</div>
@@ -40,7 +45,7 @@
 	<div class="flex flex-col gap-3 pb-8">
 		<button
 			type="button"
-			onclick={() => goto('/choose')}
+			onclick={() => goto('/stream')}
 			class="tap-scale flex items-center justify-center gap-2 rounded-full bg-ink py-4 text-[15px] font-semibold text-white shadow-glass-lg"
 		>
 			Get started
@@ -54,6 +59,6 @@
 				/>
 			</svg>
 		</button>
-		<p class="text-center text-xs text-neutral-400">Three layouts. One inbox. Pick what fits you.</p>
+		<p class="text-center text-xs text-neutral-400">One stream. Grouped by intent, not folders.</p>
 	</div>
 </div>

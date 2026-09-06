@@ -10,27 +10,50 @@
 		ruleHits,
 		toggleRule,
 		deleteRule,
-		addRule,
-		builtinRules
+		parseRuleDraft,
+		confirmRuleDraft,
+		builtinRules,
+		type RuleDraft
 	} from '$lib/state/organize.svelte';
 
 	let newTag = $state('');
-	let showBuilder = $state(false);
-	let ruleSender = $state('');
-	let ruleAction = $state('tag:Work');
+	let ruleText = $state('');
+	let draft = $state<RuleDraft | null>(null);
+	let draftError = $state<string | null>(null);
+	let thinking = $state(false);
 
 	function submitTag(e: Event) {
 		e.preventDefault();
 		if (createTag(newTag)) newTag = '';
 	}
 
-	function submitRule(e: Event) {
+	function draftRule(e: Event) {
 		e.preventDefault();
-		const action = ruleAction === 'read' ? { markRead: true } : { tag: ruleAction.slice(4) };
-		if (addRule(ruleSender, action)) {
-			ruleSender = '';
-			showBuilder = false;
-		}
+		draft = null;
+		draftError = null;
+		thinking = true;
+		// brief pause so the "understanding…" state reads as deliberate
+		setTimeout(() => {
+			const parsed = parseRuleDraft(ruleText);
+			thinking = false;
+			if (parsed) draft = parsed;
+			else
+				draftError =
+					"Couldn't work out a rule from that. Try naming a sender and what to do — e.g. “tag Swiggy and Zomato mails as Food” or “mark TLDR as read”.";
+		}, 450);
+	}
+
+	const draftHits = $derived(
+		draft
+			? ruleHits({ id: 'draft', enabled: true, match: { senderIncludes: draft.senders }, action: draft.action })
+			: 0
+	);
+
+	function acceptDraft() {
+		if (!draft) return;
+		confirmRuleDraft(draft);
+		draft = null;
+		ruleText = '';
 	}
 </script>
 
@@ -102,50 +125,75 @@
 
 		<!-- Your rules -->
 		<section class="pt-7">
-			<div class="flex items-center justify-between">
-				<h2 class="text-[13px] font-semibold tracking-wide text-neutral-500 uppercase">Your rules</h2>
-				<button
-					type="button"
-					onclick={() => (showBuilder = !showBuilder)}
-					class="tap-scale rounded-full bg-white px-3 py-1.5 text-[11.5px] font-semibold text-violet-600 shadow-glass ring-1 ring-black/[0.05]"
-				>
-					{showBuilder ? 'Cancel' : '+ New rule'}
-				</button>
-			</div>
+			<h2 class="text-[13px] font-semibold tracking-wide text-neutral-500 uppercase">Your rules</h2>
 			<p class="mt-0.5 mb-3 text-[11.5px] text-neutral-400">
-				Each rule says what it does in plain words. Toggle it off and its tags disappear everywhere.
+				Describe a rule in plain words. Prism drafts it — you confirm before anything changes.
 			</p>
 
-			{#if showBuilder}
-				<form class="mb-3 flex flex-col gap-2.5 rounded-[20px] bg-white p-4 shadow-glass ring-1 ring-violet-200" onsubmit={submitRule}>
-					<label class="flex flex-col gap-1.5">
-						<span class="text-[11px] font-semibold tracking-wide text-neutral-500 uppercase">When mail arrives from…</span>
-						<input
-							bind:value={ruleSender}
-							placeholder="Sender name, e.g. Netflix"
-							class="rounded-xl bg-neutral-100 px-3.5 py-2.5 text-[13px] text-ink placeholder:text-neutral-400 focus:outline-none"
-						/>
-					</label>
-					<label class="flex flex-col gap-1.5">
-						<span class="text-[11px] font-semibold tracking-wide text-neutral-500 uppercase">Then…</span>
-						<select
-							bind:value={ruleAction}
-							class="appearance-none rounded-xl bg-neutral-100 px-3.5 py-2.5 text-[13px] text-ink focus:outline-none"
+			<form class="mb-3 flex flex-col gap-2.5 rounded-[20px] bg-white p-4 shadow-glass ring-1 ring-violet-200" onsubmit={draftRule}>
+				<label class="flex flex-col gap-1.5">
+					<span class="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-neutral-500 uppercase">
+						<svg viewBox="0 0 24 24" class="h-3 w-3 text-violet-400" fill="currentColor">
+							<path d="M12 2l1.6 5.2a4 4 0 0 0 2.7 2.7L21.5 11.5l-5.2 1.6a4 4 0 0 0-2.7 2.7L12 21l-1.6-5.2a4 4 0 0 0-2.7-2.7L2.5 11.5l5.2-1.6a4 4 0 0 0 2.7-2.7L12 2z" />
+						</svg>
+						Tell Prism what to do
+					</span>
+					<textarea
+						bind:value={ruleText}
+						rows="2"
+						placeholder="e.g. tag Swiggy and Zomato mails as Food — or mark TLDR as read"
+						class="resize-none rounded-xl bg-neutral-100 px-3.5 py-2.5 text-[13px] leading-relaxed text-ink placeholder:text-neutral-400 focus:outline-none"
+					></textarea>
+				</label>
+				<button
+					type="submit"
+					disabled={!ruleText.trim() || thinking}
+					class="tap-scale rounded-full bg-ink py-2.5 text-[13px] font-semibold text-white disabled:opacity-30"
+				>
+					{thinking ? 'Understanding…' : 'Draft rule'}
+				</button>
+			</form>
+
+			{#if draftError}
+				<p class="mb-3 rounded-2xl bg-rose-50 px-4 py-3 text-[12.5px] leading-relaxed text-rose-600">{draftError}</p>
+			{/if}
+
+			{#if draft}
+				{@const s = ruleSentence({
+					id: 'draft',
+					enabled: true,
+					match: { senderIncludes: draft.senders },
+					action: draft.action
+				})}
+				<div class="mb-3 rounded-[20px] bg-violet-50 p-4 ring-1 ring-violet-200">
+					<p class="text-[11px] font-semibold tracking-wide text-violet-500 uppercase">Confirm this rule</p>
+					<p class="mt-1.5 text-[13.5px] leading-snug font-medium text-ink">{s.when}</p>
+					<p class="mt-0.5 text-[13px] text-violet-600">→ {s.then}</p>
+					{#if draft.tagIsNew && draft.action.tag}
+						<p class="mt-1.5 text-[11.5px] text-neutral-500">
+							Will create a new <span class="font-semibold text-ink">{draft.action.tag}</span> tag.
+						</p>
+					{/if}
+					<p class="mt-1 text-[11px] text-neutral-400">
+						Matches {draftHits.toLocaleString()} {draftHits === 1 ? 'mail' : 'mails'} right now
+					</p>
+					<div class="mt-3 flex gap-2">
+						<button
+							type="button"
+							onclick={acceptDraft}
+							class="tap-scale flex-1 rounded-full bg-ink py-2.5 text-[13px] font-semibold text-white"
 						>
-							{#each tagStore.tags as tag (tag.name)}
-								<option value={`tag:${tag.name}`}>Tag it {tag.name}</option>
-							{/each}
-							<option value="read">Mark it as read</option>
-						</select>
-					</label>
-					<button
-						type="submit"
-						disabled={!ruleSender.trim()}
-						class="tap-scale rounded-full bg-ink py-2.5 text-[13px] font-semibold text-white disabled:opacity-30"
-					>
-						Create rule
-					</button>
-				</form>
+							Looks right — create
+						</button>
+						<button
+							type="button"
+							onclick={() => (draft = null)}
+							class="tap-scale rounded-full bg-white px-4 py-2.5 text-[13px] font-semibold text-neutral-500 ring-1 ring-black/[0.06]"
+						>
+							Try again
+						</button>
+					</div>
+				</div>
 			{/if}
 
 			<div class="flex flex-col gap-2.5">

@@ -78,6 +78,16 @@ export function markDone(id: string, done = true) {
 	}
 }
 
+/** "Delete" in the prototype = archive: the mail leaves every view but stays recoverable. */
+export function deleteThread(id: string) {
+	const t = getThread(id);
+	if (t) {
+		t.archived = true;
+		t.unread = false;
+		persistPatch(id, { archived: true, unread: false });
+	}
+}
+
 export function clearMerchant(merchant: string) {
 	for (const t of inbox.threads) {
 		if (t.group === 'orders' && t.merchant === merchant && !t.archived) {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Thread } from '$lib/types';
 	import Avatar from '$lib/components/shared/Avatar.svelte';
-	import { markDone } from '$lib/state/inbox.svelte';
+	import { markDone, deleteThread } from '$lib/state/inbox.svelte';
 	import { effectiveTags, tagMeta } from '$lib/state/organize.svelte';
 	import { goto } from '$app/navigation';
 
@@ -22,6 +22,11 @@
 	function done(e: Event) {
 		e.stopPropagation();
 		markDone(thread.id);
+	}
+
+	function remove(e: Event) {
+		e.stopPropagation();
+		deleteThread(thread.id);
 	}
 </script>
 
@@ -108,6 +113,23 @@
 		{/if}
 
 		<span class="flex-1"></span>
+
+		<button
+			type="button"
+			onclick={remove}
+			aria-label="Delete mail"
+			class="tap-scale flex h-7 w-7 items-center justify-center rounded-full text-neutral-300 transition-colors hover:bg-rose-50 hover:text-rose-500 active:bg-rose-50 active:text-rose-500"
+		>
+			<svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none">
+				<path
+					d="M4 7h16M10 11v6m4-6v6M6 7l1 13a1 1 0 0 0 1 .9h8a1 1 0 0 0 1-.9L18 7M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
+					stroke="currentColor"
+					stroke-width="1.8"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+			</svg>
+		</button>
 
 		{#if thread.group === 'action'}
 			<button

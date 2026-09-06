@@ -1,4 +1,4 @@
-import { inbox } from './inbox.svelte';
+import { inbox, deleteThread } from './inbox.svelte';
 import type { Thread } from '$lib/types';
 
 /**
@@ -83,9 +83,9 @@ export const ruleStore = $state({
 	rules: [
 		{ id: 'r-food', enabled: true, match: { senderIncludes: ['Swiggy', 'Zomato', 'Uber Eats'] }, action: { tag: 'Food' } },
 		{ id: 'r-shopping', enabled: true, match: { senderIncludes: ['Amazon', 'Flipkart', 'Myntra'] }, action: { tag: 'Shopping' } },
-		{ id: 'r-finance', enabled: true, match: { senderIncludes: ['Stripe', 'Apple', 'First National Bank', 'City Power'] }, action: { tag: 'Finance' } },
+		{ id: 'r-finance', enabled: true, match: { senderIncludes: ['Stripe', 'Apple', 'Security Alerts', 'City Power'] }, action: { tag: 'Finance' } },
 		{ id: 'r-work', enabled: true, match: { senderIncludes: ['GitHub', 'Jira', 'Slack'] }, action: { tag: 'Work' } },
-		{ id: 'r-travel', enabled: true, match: { senderIncludes: ['Skyline Airways'] }, action: { tag: 'Travel' } }
+		{ id: 'r-travel', enabled: true, match: { senderIncludes: ['Airline Alerts'] }, action: { tag: 'Travel' } }
 	] as Rule[]
 });
 
@@ -141,13 +141,13 @@ export function deleteRule(id: string) {
 	ruleStore.rules = ruleStore.rules.filter((r) => r.id !== id);
 }
 
-export function addRule(senderContains: string, action: { tag?: string; markRead?: boolean }): Rule | undefined {
-	const clean = senderContains.trim();
-	if (!clean || (!action.tag && !action.markRead)) return undefined;
+export function addRule(senders: string | string[], action: { tag?: string; markRead?: boolean }): Rule | undefined {
+	const list = (Array.isArray(senders) ? senders : [senders]).map((s) => s.trim()).filter(Boolean);
+	if (list.length === 0 || (!action.tag && !action.markRead)) return undefined;
 	const rule: Rule = {
 		id: `r-${nextRuleId++}`,
 		enabled: true,
-		match: { senderIncludes: [clean] },
+		match: { senderIncludes: list },
 		action
 	};
 	ruleStore.rules.push(rule);
@@ -158,6 +158,122 @@ export function addRule(senderContains: string, action: { tag?: string; markRead
 		}
 	}
 	return rule;
+}
+
+/* ------------------------------------------------------------------ */
+/* AI-assisted rule drafting: turn a loose sentence into a rule.       */
+/* ------------------------------------------------------------------ */
+
+export interface RuleDraft {
+	senders: string[];
+	action: { tag?: string; markRead?: boolean };
+	/** the tag doesn't exist yet and will be created on confirm */
+	tagIsNew: boolean;
+}
+
+/**
+ * Parses free text like "tag Netflix mails as Entertainment" or
+ * "mark TLDR newsletters as read" into a structured rule proposal.
+ * (Stands in for a real LLM call — the interaction is the point.)
+ */
+export function parseRuleDraft(text: string): RuleDraft | null {
+	const raw = text.trim();
+	if (!raw) return null;
+	const lower = ` ${raw.toLowerCase()} `;
+
+	const markRead = /(mark|set)[^.]{0,24}read|as read|skip (the )?inbox|mute|silence/.test(lower);
+
+	// tag name: prefer "as/into/under/with X", else a tag name mentioned verbatim
+	let tagRaw: string | undefined;
+	const asMatches = [...lower.matchAll(/\b(?:as|into|under|with)\s+([a-z][a-z0-9&-]{1,18})/g)];
+	if (asMatches.length > 0) {
+		const candidate = asMatches[asMatches.length - 1][1];
+		if (candidate !== 'read') tagRaw = candidate;
+	}
+	if (!tagRaw) {
+		const known = tagStore.tags.find((t) => lower.includes(` ${t.name.toLowerCase()} `));
+		if (known) tagRaw = known.name;
+	}
+	if (!tagRaw && !markRead && /\b(?:tag|label)\s+(?:it|them|these)?\s*([a-z][a-z0-9&-]{1,18})\s*$/.test(lower)) {
+		tagRaw = lower.match(/\b(?:tag|label)\s+(?:it|them|these)?\s*([a-z][a-z0-9&-]{1,18})\s*$/)![1];
+	}
+
+	const SKIP = new Set([
+		'tag', 'label', 'mark', 'mute', 'silence', 'mails', 'mail', 'emails', 'email', 'as', 'read',
+		'from', 'the', 'and', 'or', 'it', 'them', 'these', 'into', 'under', 'with', 'then', 'move',
+		'put', 'skip', 'inbox', 'newsletter', 'newsletters', 'new', 'a', 'an', 'my', 'to', 'set'
+	]);
+
+	const senders: string[] = [];
+	const pushSender = (value: string) => {
+		const s = value.trim().replace(/[.,!?]+$/, '');
+		if (s.length < 2 || SKIP.has(s.toLowerCase())) return;
+		if (tagRaw && s.toLowerCase() === tagRaw.toLowerCase()) return;
+		if (senders.some((x) => x.toLowerCase() === s.toLowerCase())) return;
+		senders.push(s);
+	};
+
+	const knownSenders = new Set<string>();
+	for (const t of inbox.threads) {
+		if (t.merchant) knownSenders.add(t.merchant);
+		knownSenders.add(t.sender.split('·')[0].trim());
+	}
+	for (const s of knownSenders) {
+		if (s.length < 3) continue;
+		if (lower.includes(s.toLowerCase())) pushSender(s);
+	}
+
+	if (senders.length === 0) {
+		const fromMatch = raw.match(/from\s+([A-Za-z0-9 .&'-]{2,30})/i);
+		if (fromMatch) {
+			fromMatch[1]
+				.replace(/\b(and|then|tag|label|mark|as|into|under|move|put|read)\b.*$/i, '')
+				.split(/\s*(?:,|&|and|or)\s*/i)
+				.forEach(pushSender);
+		}
+	}
+
+	if (senders.length === 0) {
+		const afterVerb = raw.match(
+			/\b(?:tag|label|mark|mute|silence)\s+(.+?)(?:\s+(?:as|into|under|with|read|mails?|emails?|newsletters?)\b)/i
+		);
+		if (afterVerb) afterVerb[1].split(/\s*(?:,|&|and|or)\s*/i).forEach(pushSender);
+	}
+
+	if (senders.length === 0) {
+		const muteOnly = raw.match(/\b(?:mute|silence)\s+([A-Za-z0-9 .&'-]{2,30})$/i);
+		if (muteOnly) pushSender(muteOnly[1]);
+	}
+
+	if (senders.length === 0) return null;
+
+	if (markRead && !tagRaw) return { senders, action: { markRead: true }, tagIsNew: false };
+	if (!tagRaw) return null;
+
+	const existing = tagStore.tags.find((t) => t.name.toLowerCase() === tagRaw!.toLowerCase());
+	const tagName = existing ? existing.name : tagRaw.charAt(0).toUpperCase() + tagRaw.slice(1);
+	return {
+		senders,
+		action: { tag: tagName, ...(markRead ? { markRead: true } : {}) },
+		tagIsNew: !existing
+	};
+}
+
+export function confirmRuleDraft(draft: RuleDraft): Rule | undefined {
+	if (draft.action.tag && draft.tagIsNew) createTag(draft.action.tag);
+	return addRule(draft.senders, draft.action);
+}
+
+/** Archive ("delete") every non-archived mail carrying this tag. */
+export function deleteTagged(tag: string): number {
+	let n = 0;
+	for (const t of inbox.threads) {
+		if (!t.archived && effectiveTags(t).includes(tag)) {
+			deleteThread(t.id);
+			n++;
+		}
+	}
+	return n;
 }
 
 /* ------------------------------------------------------------------ */

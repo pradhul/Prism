@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { getThread, markRead, markDone } from '$lib/state/inbox.svelte';
+	import { getThread, markRead, markDone, deleteThread } from '$lib/state/inbox.svelte';
 	import {
 		effectiveTags,
 		tagMeta,
@@ -37,10 +37,25 @@
 		if (thread?.unread) markRead(thread.id);
 	});
 
+	let leaving = $state(false);
+
+	function back() {
+		leaving = true;
+		// history.back() is instant when we came from the stream; goto is the cold-start fallback
+		if (history.length > 1) history.back();
+		else goto('/stream');
+	}
+
 	function finish() {
 		if (!thread) return;
 		markDone(thread.id);
-		goto('/stream');
+		back();
+	}
+
+	function remove() {
+		if (!thread) return;
+		deleteThread(thread.id);
+		back();
 	}
 </script>
 
@@ -62,9 +77,12 @@
 		<header class="safe-top relative z-10 flex items-center justify-between px-4 pt-4 pb-3">
 			<button
 				type="button"
-				onclick={() => goto('/stream')}
+				onpointerdown={() => (leaving = true)}
+				onclick={back}
 				aria-label="Back"
-				class="tap-scale flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-glass ring-1 ring-black/5"
+				class="tap-scale flex h-9 w-9 items-center justify-center rounded-full shadow-glass ring-1 ring-black/5 transition-colors duration-100 {leaving
+					? 'bg-ink text-white'
+					: 'bg-white'}"
 			>
 				<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none">
 					<path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -78,29 +96,37 @@
 				{meta.label}
 			</span>
 
-			{#if thread.group === 'action' && !thread.done}
+			<div class="flex items-center gap-2">
+				{#if thread.group === 'action' && !thread.done}
+					<button
+						type="button"
+						onclick={finish}
+						aria-label="Mark done"
+						class="tap-scale flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-600 ring-1 ring-emerald-100"
+					>
+						<svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none">
+							<path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+						</svg>
+						Done
+					</button>
+				{/if}
 				<button
 					type="button"
-					onclick={finish}
-					aria-label="Mark done"
-					class="tap-scale flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-600 ring-1 ring-emerald-100"
+					onclick={remove}
+					aria-label="Delete mail"
+					class="tap-scale flex h-9 w-9 items-center justify-center rounded-full bg-white text-neutral-400 shadow-glass ring-1 ring-black/5 transition-colors active:bg-rose-500 active:text-white"
 				>
-					<svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none">
-						<path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-					</svg>
-					Done
-				</button>
-			{:else}
-				<button
-					type="button"
-					aria-label="More"
-					class="tap-scale flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-glass ring-1 ring-black/5"
-				>
-					<svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor">
-						<circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" />
+					<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none">
+						<path
+							d="M4 7h16M10 11v6m4-6v6M6 7l1 13a1 1 0 0 0 1 .9h8a1 1 0 0 0 1-.9L18 7M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
+							stroke="currentColor"
+							stroke-width="1.8"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
 					</svg>
 				</button>
-			{/if}
+			</div>
 		</header>
 
 		<div class="no-scrollbar flex-1 overflow-y-auto px-4 pb-4">

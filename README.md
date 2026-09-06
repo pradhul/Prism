@@ -49,7 +49,23 @@ This is an early prototype: light mode only, built for phone-sized viewports fir
 - [SvelteKit](https://svelte.dev/docs/kit) + Svelte 5 (runes)
 - [Tailwind CSS v4](https://tailwindcss.com/)
 - TypeScript
-- No backend — everything is static mock data for this iteration
+- Optional live mode: Google OAuth + Gmail read-only sync, Neon Postgres via Drizzle
+  (`src/lib/server/`). Without credentials the app runs fully on mock data.
+
+## Live Gmail mode
+
+The Stream can show a real Gmail account instead of the demo mailbox. Set these environment
+variables (e.g. in `.env` locally or in Vercel):
+
+| Variable | Purpose |
+| --- | --- |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth app (Gmail read-only scope) |
+| `DATABASE_URL` (or `POSTGRES_URL` / `NEON_DATABASE_URL`) | Neon/Postgres connection string |
+| `APP_URL` | Public base URL for the OAuth redirect (defaults to `http://localhost:5173`) |
+
+Sign in from the start page ("Continue with Gmail"); synced threads are stored per-user and the
+Stream switches to live data with a Gmail badge and a refresh button. "Try demo inbox" keeps
+everything local and mock.
 
 ## Getting started
 

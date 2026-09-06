@@ -11,7 +11,7 @@
 	const tags = $derived(effectiveTags(thread));
 
 	function open() {
-		goto(`/stream/${thread.id}`);
+		goto(`/stream/${encodeURIComponent(thread.id)}`);
 	}
 
 	function toggle(e: Event) {

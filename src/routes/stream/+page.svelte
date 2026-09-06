@@ -1,19 +1,62 @@
 <script lang="ts">
-	import { inbox, markDone, markGroupRead } from '$lib/state/inbox.svelte';
+	import {
+		inbox,
+		markDone,
+		markGroupRead,
+		setLiveThreads,
+		syncLiveInbox,
+		useDemoInbox
+	} from '$lib/state/inbox.svelte';
 	import { groupMeta } from '$lib/data/groups';
 	import StreamBubble from '$lib/components/stream/StreamBubble.svelte';
 	import OrderMerchantGroup from '$lib/components/stream/OrderMerchantGroup.svelte';
 	import PrismMark from '$lib/components/shared/PrismMark.svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+
+	let { data } = $props();
+
+	$effect(() => {
+		if (data.live && data.threads) {
+			setLiveThreads(data.threads);
+		} else if (!data.live && inbox.source === 'gmail') {
+			useDemoInbox();
+		}
+	});
+
+	$effect(() => {
+		if (!data.live) return;
+		if (page.url.searchParams.get('sync') !== '1') return;
+		if (inbox.syncing) return;
+		void (async () => {
+			try {
+				await syncLiveInbox();
+				await goto('/stream', { replaceState: true });
+			} catch (err) {
+				syncError = err instanceof Error ? err.message : 'Sync failed';
+			}
+		})();
+	});
 
 	let filter = $state<'unread' | 'all'>('unread');
 	let showDone = $state(false);
 	let catchupLimit = $state(6);
 	let otherLimit = $state(10);
+	let syncError = $state<string | null>(null);
 
 	const live = $derived(inbox.threads.filter((t) => !t.archived));
 	const totalCount = $derived(live.length);
 	const unreadCount = $derived(live.filter((t) => t.unread).length);
+	const isGmail = $derived(inbox.source === 'gmail');
+
+	async function refresh() {
+		syncError = null;
+		try {
+			await syncLiveInbox();
+		} catch (err) {
+			syncError = err instanceof Error ? err.message : 'Sync failed';
+		}
+	}
 
 	// Needs Action always shows pending mail read or unread (past 2 weeks) —
 	// being read doesn't mean the action was taken.
@@ -60,8 +103,40 @@
 		<div class="flex items-center gap-2">
 			<PrismMark size={22} />
 			<span class="font-serif text-base font-medium text-ink">Prism</span>
+			{#if isGmail}
+				<span
+					class="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-700 uppercase ring-1 ring-emerald-100"
+				>
+					Gmail
+				</span>
+			{/if}
 		</div>
 		<div class="flex items-center gap-2">
+			{#if isGmail}
+				<button
+					type="button"
+					onclick={refresh}
+					disabled={inbox.syncing}
+					aria-label="Refresh Gmail"
+					class="glass tap-scale flex h-9 w-9 items-center justify-center rounded-full text-ink shadow-glass ring-1 ring-black/5 disabled:opacity-50"
+				>
+					<svg viewBox="0 0 24 24" class="h-4 w-4 {inbox.syncing ? 'animate-spin' : ''}" fill="none">
+						<path
+							d="M4 12a8 8 0 0 1 14.2-5M20 12a8 8 0 0 1-14.2 5"
+							stroke="currentColor"
+							stroke-width="1.8"
+							stroke-linecap="round"
+						/>
+						<path
+							d="M18 3v4h-4M6 21v-4h4"
+							stroke="currentColor"
+							stroke-width="1.8"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</button>
+			{/if}
 			<button
 				type="button"
 				onclick={() => goto('/search')}
@@ -99,6 +174,15 @@
 			<span class="font-semibold text-violet-600">{unreadCount} unread</span> — grouped by what they need
 			from you, not where they're filed.
 		</p>
+		{#if !page.data.user}
+			<p class="mt-2 text-[12px] text-neutral-400">
+				Demo mailbox.
+				<a class="font-semibold text-violet-600 underline" href="/api/auth/google?next=/stream">Connect Gmail</a>
+			</p>
+		{/if}
+		{#if syncError}
+			<p class="mt-2 text-[12px] text-rose-600">{syncError}</p>
+		{/if}
 	</div>
 
 	<div class="relative z-10 mt-3 flex gap-2 px-5 pb-3">
@@ -254,7 +338,7 @@
 				{#each other.slice(0, otherLimit) as t (t.id)}
 					<button
 						type="button"
-						onclick={() => goto(`/stream/${t.id}`)}
+						onclick={() => goto(`/stream/${encodeURIComponent(t.id)}`)}
 						class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left {t.unread ? 'bg-white/70' : 'opacity-50'}"
 					>
 						{#if t.unread}

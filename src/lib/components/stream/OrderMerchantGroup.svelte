@@ -46,7 +46,7 @@
 		{#each visible as t (t.id)}
 			<button
 				type="button"
-				onclick={() => goto(`/stream/${t.id}`)}
+				onclick={() => goto(`/stream/${encodeURIComponent(t.id)}`)}
 				class="flex items-center gap-2.5 px-4 py-2.5 text-left {t.unread ? '' : 'opacity-50'}"
 			>
 				{#if t.unread}

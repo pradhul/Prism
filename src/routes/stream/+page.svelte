@@ -1,16 +1,19 @@
 <script lang="ts">
 	import {
 		inbox,
+		deleteThread,
 		markDone,
-		markGroupRead,
+		markRead,
 		setLiveThreads,
 		syncLiveInbox,
 		useDemoInbox
 	} from '$lib/state/inbox.svelte';
+	import { effectiveTags, tagMeta, tagStore, deleteTagged } from '$lib/state/organize.svelte';
 	import { groupMeta } from '$lib/data/groups';
 	import StreamBubble from '$lib/components/stream/StreamBubble.svelte';
 	import OrderMerchantGroup from '$lib/components/stream/OrderMerchantGroup.svelte';
 	import PrismMark from '$lib/components/shared/PrismMark.svelte';
+	import Avatar from '$lib/components/shared/Avatar.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
@@ -39,15 +42,53 @@
 	});
 
 	let filter = $state<'unread' | 'all'>('unread');
+	let tagFilter = $state<string | null>(null);
+	let confirmDelete = $state(false);
 	let showDone = $state(false);
 	let catchupLimit = $state(6);
 	let otherLimit = $state(10);
 	let syncError = $state<string | null>(null);
 
-	const live = $derived(inbox.threads.filter((t) => !t.archived));
-	const totalCount = $derived(live.length);
-	const unreadCount = $derived(live.filter((t) => t.unread).length);
+	const allLive = $derived(inbox.threads.filter((t) => !t.archived));
+	const totalCount = $derived(allLive.length);
+	const unreadCount = $derived(allLive.filter((t) => t.unread).length);
 	const isGmail = $derived(inbox.source === 'gmail');
+
+	// with a tag selected, every section narrows to mail carrying that tag
+	const live = $derived(
+		tagFilter === null ? allLive : allLive.filter((t) => effectiveTags(t).includes(tagFilter!))
+	);
+	const taggedCount = $derived(tagFilter === null ? 0 : live.length);
+	const taggedUnread = $derived(tagFilter === null ? 0 : live.filter((t) => t.unread).length);
+
+	const unreadByGroup = $derived.by(() => {
+		const map = { action: 0, orders: 0, catchup: 0, other: 0 };
+		for (const t of live) if (t.unread) map[t.group]++;
+		return map;
+	});
+
+	function pickTag(name: string) {
+		tagFilter = tagFilter === name ? null : name;
+		confirmDelete = false;
+	}
+
+	function readAllTagged() {
+		for (const t of live) if (t.unread) markRead(t.id);
+	}
+
+	function readVisibleGroup(group: 'action' | 'orders' | 'catchup' | 'other') {
+		for (const t of live) if (t.group === group && t.unread) markRead(t.id);
+	}
+
+	function deleteAllTagged() {
+		if (!tagFilter) return;
+		if (!confirmDelete) {
+			confirmDelete = true;
+			return;
+		}
+		deleteTagged(tagFilter);
+		confirmDelete = false;
+	}
 
 	async function refresh() {
 		syncError = null;
@@ -83,8 +124,6 @@
 			.filter((t) => t.group === 'catchup' && (filter === 'all' || t.unread))
 			.sort((a, b) => a.daysAgo - b.daysAgo)
 	);
-	const catchupUnread = $derived(live.filter((t) => t.group === 'catchup' && t.unread).length);
-
 	const other = $derived(
 		live
 			.filter((t) => t.group === 'other' && (filter === 'all' || t.unread))
@@ -185,8 +224,8 @@
 		{/if}
 	</div>
 
-	<div class="relative z-10 mt-3 flex gap-2 px-5 pb-3">
-		<div class="glass flex rounded-full p-1 ring-1 ring-black/[0.06]">
+	<div class="no-scrollbar relative z-10 mt-3 flex items-center gap-2 overflow-x-auto px-5 pb-3">
+		<div class="glass flex shrink-0 rounded-full p-1 ring-1 ring-black/[0.06]">
 			<button
 				type="button"
 				onclick={() => (filter = 'unread')}
@@ -206,19 +245,79 @@
 				All mail
 			</button>
 		</div>
+
+		{#each tagStore.tags as tag (tag.name)}
+			<button
+				type="button"
+				onclick={() => pickTag(tag.name)}
+				class="tap-scale flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold ring-1 {tagFilter === tag.name
+					? 'bg-ink text-white ring-ink'
+					: `${tag.pill}`}"
+			>
+				<span class="h-1.5 w-1.5 rounded-full {tagFilter === tag.name ? 'bg-white' : tag.dot}"></span>
+				{tag.name}
+			</button>
+		{/each}
 	</div>
+
+	{#if tagFilter}
+		<div class="relative z-10 mx-5 mb-2 flex items-center gap-2 rounded-2xl bg-white/80 px-3.5 py-2.5 shadow-glass ring-1 ring-black/[0.05]">
+			<p class="min-w-0 flex-1 truncate text-[12px] text-neutral-500">
+				<span class="font-bold text-ink">{taggedCount.toLocaleString()}</span> mails tagged
+				<span class="font-semibold {tagMeta(tagFilter).pill.split(' ')[1]}">{tagFilter}</span>
+			</p>
+			{#if taggedUnread > 0}
+				<button
+					type="button"
+					onclick={readAllTagged}
+					class="tap-scale shrink-0 rounded-full bg-violet-50 px-3 py-1.5 text-[11px] font-semibold text-violet-600 ring-1 ring-violet-100"
+				>
+					Read all
+				</button>
+			{/if}
+			<button
+				type="button"
+				onclick={deleteAllTagged}
+				class="tap-scale shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold ring-1 {confirmDelete
+					? 'bg-rose-500 text-white ring-rose-500'
+					: 'bg-rose-50 text-rose-500 ring-rose-100'}"
+			>
+				{confirmDelete ? `Sure? Delete ${taggedCount}` : 'Delete all'}
+			</button>
+			<button
+				type="button"
+				onclick={() => pickTag(tagFilter!)}
+				aria-label="Clear tag filter"
+				class="tap-scale flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500"
+			>
+				<svg viewBox="0 0 24 24" class="h-3 w-3" fill="none">
+					<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+				</svg>
+			</button>
+		</div>
+	{/if}
 
 	<div class="no-scrollbar relative flex-1 overflow-y-auto px-5 pb-28">
 		<div class="pointer-events-none absolute top-0 bottom-8 left-[26px] w-px bg-gradient-to-b from-violet-200 via-neutral-200 to-transparent"></div>
 
 		<!-- Needs Action -->
 		<div class="relative pt-2 pb-1">
-			<div class="mb-1 flex items-center gap-2 pl-[3px]">
+			<div class="sticky top-0 z-20 -mx-1 mb-1 flex items-center gap-2 rounded-2xl bg-paper/90 px-1 py-1.5 pl-[7px] backdrop-blur-sm">
 				<span class="relative flex h-5 w-5 items-center justify-center rounded-full bg-paper ring-2 ring-white">
 					<span class="h-2 w-2 rounded-full bg-rose-500"></span>
 				</span>
 				<h2 class="text-sm font-semibold text-ink">{groupMeta.action.label}</h2>
 				<span class="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-600">{actionPending.length}</span>
+				<span class="flex-1"></span>
+				{#if unreadByGroup.action > 0}
+					<button
+						type="button"
+						onclick={() => readVisibleGroup('action')}
+						class="tap-scale rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-violet-600 shadow-glass ring-1 ring-black/[0.05]"
+					>
+						Read all
+					</button>
+				{/if}
 			</div>
 			<p class="mb-3 pl-8 text-[11.5px] text-neutral-400">{groupMeta.action.hint}. Mark ✓ done and it disappears.</p>
 
@@ -261,13 +360,23 @@
 
 		<!-- Orders & Deliveries -->
 		<div class="relative pt-6 pb-1">
-			<div class="mb-1 flex items-center gap-2 pl-[3px]">
+			<div class="sticky top-0 z-20 -mx-1 mb-1 flex items-center gap-2 rounded-2xl bg-paper/90 px-1 py-1.5 pl-[7px] backdrop-blur-sm">
 				<span class="relative flex h-5 w-5 items-center justify-center rounded-full bg-paper ring-2 ring-white">
 					<span class="h-2 w-2 rounded-full bg-amber-500"></span>
 				</span>
 				<h2 class="text-sm font-semibold text-ink">{groupMeta.orders.label}</h2>
 				<span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-600">{orders.length}</span>
-				<span class="text-[11px] text-neutral-400">· last 30 days</span>
+				<span class="text-[11px] text-neutral-400">· 30 days</span>
+				<span class="flex-1"></span>
+				{#if unreadByGroup.orders > 0}
+					<button
+						type="button"
+						onclick={() => readVisibleGroup('orders')}
+						class="tap-scale rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-violet-600 shadow-glass ring-1 ring-black/[0.05]"
+					>
+						Read all
+					</button>
+				{/if}
 			</div>
 			<p class="mb-3 pl-8 text-[11.5px] text-neutral-400">{groupMeta.orders.hint}.</p>
 
@@ -285,20 +394,20 @@
 
 		<!-- Catch Up -->
 		<div class="relative pt-6 pb-1">
-			<div class="mb-1 flex items-center gap-2 pl-[3px]">
+			<div class="sticky top-0 z-20 -mx-1 mb-1 flex items-center gap-2 rounded-2xl bg-paper/90 px-1 py-1.5 pl-[7px] backdrop-blur-sm">
 				<span class="relative flex h-5 w-5 items-center justify-center rounded-full bg-paper ring-2 ring-white">
 					<span class="h-2 w-2 rounded-full bg-violet-500"></span>
 				</span>
 				<h2 class="text-sm font-semibold text-ink">{groupMeta.catchup.label}</h2>
 				<span class="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-600">{catchup.length}</span>
 				<span class="flex-1"></span>
-				{#if catchupUnread > 0}
+				{#if unreadByGroup.catchup > 0}
 					<button
 						type="button"
-						onclick={() => markGroupRead('catchup')}
+						onclick={() => readVisibleGroup('catchup')}
 						class="tap-scale rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-violet-600 shadow-glass ring-1 ring-black/[0.05]"
 					>
-						Mark all read
+						Read all
 					</button>
 				{/if}
 			</div>
@@ -325,32 +434,56 @@
 
 		<!-- Everything Else -->
 		<div class="relative pt-6 pb-1">
-			<div class="mb-1 flex items-center gap-2 pl-[3px]">
+			<div class="sticky top-0 z-20 -mx-1 mb-1 flex items-center gap-2 rounded-2xl bg-paper/90 px-1 py-1.5 pl-[7px] backdrop-blur-sm">
 				<span class="relative flex h-5 w-5 items-center justify-center rounded-full bg-paper ring-2 ring-white">
 					<span class="h-2 w-2 rounded-full bg-slate-300"></span>
 				</span>
 				<h2 class="text-sm font-semibold text-ink">{groupMeta.other.label}</h2>
 				<span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">{other.length}</span>
+				<span class="flex-1"></span>
+				{#if unreadByGroup.other > 0}
+					<button
+						type="button"
+						onclick={() => readVisibleGroup('other')}
+						class="tap-scale rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-violet-600 shadow-glass ring-1 ring-black/[0.05]"
+					>
+						Read all
+					</button>
+				{/if}
 			</div>
 			<p class="mb-3 pl-8 text-[11.5px] text-neutral-400">{groupMeta.other.hint}.</p>
 
 			<div class="flex flex-col gap-1 pl-8">
 				{#each other.slice(0, otherLimit) as t (t.id)}
-					<button
-						type="button"
-						onclick={() => goto(`/stream/${encodeURIComponent(t.id)}`)}
-						class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left {t.unread ? 'bg-white/70' : 'opacity-50'}"
-					>
-						{#if t.unread}
-							<span class="h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500"></span>
-						{:else}
-							<span class="h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-200"></span>
-						{/if}
-						<span class="min-w-0 flex-1 truncate text-[12.5px] {t.unread ? 'font-medium text-ink' : 'text-neutral-500'}">
-							<span class="font-semibold">{t.sender}</span> — {t.subject}
-						</span>
-						<span class="shrink-0 text-[10.5px] text-neutral-400">{t.timestamp}</span>
-					</button>
+					<div class="flex items-center gap-1 rounded-xl {t.unread ? 'bg-white/70' : 'opacity-50'}">
+						<button
+							type="button"
+							onclick={() => goto(`/stream/${encodeURIComponent(t.id)}`)}
+							class="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2.5 text-left"
+						>
+							<Avatar initials={t.senderInitials} sender={t.sender} classes={t.avatar} size="sm" />
+							<span class="min-w-0 flex-1 truncate text-[12.5px] {t.unread ? 'font-medium text-ink' : 'text-neutral-500'}">
+								<span class="font-semibold">{t.sender}</span> — {t.subject}
+							</span>
+							<span class="shrink-0 text-[10.5px] text-neutral-400">{t.timestamp}</span>
+						</button>
+						<button
+							type="button"
+							onclick={() => deleteThread(t.id)}
+							aria-label={`Delete ${t.subject}`}
+							class="tap-scale mr-1.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-neutral-300 transition-colors hover:bg-rose-50 hover:text-rose-500"
+						>
+							<svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none">
+								<path
+									d="M4 7h16M10 11v6m4-6v6M6 7l1 13a1 1 0 0 0 1 .9h8a1 1 0 0 0 1-.9L18 7M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
+									stroke="currentColor"
+									stroke-width="1.8"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								/>
+							</svg>
+						</button>
+					</div>
 				{/each}
 				{#if other.length > otherLimit}
 					<button

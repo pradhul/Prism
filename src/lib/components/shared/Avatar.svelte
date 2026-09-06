@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { senderIcon } from '$lib/data/senderIcons';
+	import { resolveSenderIcon } from '$lib/data/senderIcons';
 
 	let {
 		initials,
 		sender,
-		classes = 'bg-slate-100 text-slate-700',
+		classes: _classes = 'bg-slate-100 text-slate-700',
 		size = 'md'
 	}: {
 		initials: string;
@@ -26,25 +26,15 @@
 		lg: 'h-6 w-6'
 	};
 
-	const icon = $derived(senderIcon(sender));
+	const icon = $derived(resolveSenderIcon(sender, initials));
 </script>
 
-{#if icon}
-	<div
-		class="flex shrink-0 items-center justify-center rounded-full ring-1 ring-black/[0.08] {sizes[size]}"
-		style="background: {icon.bg}"
-	>
-		<svg viewBox="0 0 24 24" class={iconSizes[size]} role="img" aria-label={icon.title}>
-			<!-- eslint-disable-next-line svelte/no-at-html-tags -- static, hand-authored brand SVG data -->
-			{@html icon.svg}
-		</svg>
-	</div>
-{:else}
-	<div
-		class="flex shrink-0 items-center justify-center rounded-full font-semibold {sizes[
-			size
-		]} {classes}"
-	>
-		{initials}
-	</div>
-{/if}
+<div
+	class="flex shrink-0 items-center justify-center rounded-full ring-1 ring-black/[0.08] {sizes[size]}"
+	style="background: {icon.bg}"
+>
+	<svg viewBox="0 0 24 24" class={iconSizes[size]} role="img" aria-label={icon.title}>
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -- static, hand-authored brand SVG data -->
+		{@html icon.svg}
+	</svg>
+</div>

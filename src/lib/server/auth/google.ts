@@ -7,7 +7,30 @@ const SCOPES = [
 	'https://www.googleapis.com/auth/gmail.readonly'
 ].join(' ');
 
-export function googleAuthUrl(state: string): string {
+/**
+ * Google refused the grant in a way that only the user can fix by signing in
+ * again: the refresh token was revoked, expired (7 days for apps in "testing"),
+ * the password changed, or the account was removed.
+ */
+export class GoogleReauthRequiredError extends Error {
+	readonly code = 'reauth_required' as const;
+	constructor(
+		public readonly reason: string,
+		message = 'Gmail needs to be reconnected'
+	) {
+		super(message);
+		this.name = 'GoogleReauthRequiredError';
+	}
+}
+
+export function isReauthRequired(err: unknown): err is GoogleReauthRequiredError {
+	return err instanceof GoogleReauthRequiredError;
+}
+
+/** OAuth error codes that mean "this grant is dead" rather than "we misconfigured something". */
+const DEAD_GRANT_CODES = new Set(['invalid_grant', 'unauthorized_client']);
+
+export function googleAuthUrl(state: string, loginHint?: string): string {
 	const params = new URLSearchParams({
 		client_id: requireEnv('GOOGLE_CLIENT_ID'),
 		redirect_uri: `${getAppUrl()}/api/auth/callback/google`,
@@ -18,6 +41,8 @@ export function googleAuthUrl(state: string): string {
 		include_granted_scopes: 'true',
 		state
 	});
+	// preselect the account when we're reconnecting a known user
+	if (loginHint) params.set('login_hint', loginHint);
 	return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
 }
 
@@ -62,6 +87,18 @@ export async function refreshAccessToken(refreshToken: string): Promise<GoogleTo
 	});
 	if (!res.ok) {
 		const text = await res.text();
+		let code = '';
+		let description = '';
+		try {
+			const body = JSON.parse(text) as { error?: string; error_description?: string };
+			code = body.error ?? '';
+			description = body.error_description ?? '';
+		} catch {
+			// not JSON — fall through to the generic error
+		}
+		if (DEAD_GRANT_CODES.has(code)) {
+			throw new GoogleReauthRequiredError(`${code}${description ? `: ${description}` : ''}`);
+		}
 		throw new Error(`Token refresh failed: ${res.status} ${text}`);
 	}
 	return res.json();

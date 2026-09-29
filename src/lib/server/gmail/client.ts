@@ -1,20 +1,44 @@
 import { eq } from 'drizzle-orm';
 import { ensureSchema, getDb } from '$lib/server/db';
 import { oauthTokens } from '$lib/server/db/schema';
-import { refreshAccessToken } from '$lib/server/auth/google';
+import { GoogleReauthRequiredError, isReauthRequired, refreshAccessToken } from '$lib/server/auth/google';
+
+/** Whether we still hold a Gmail grant for this user (false after a dead token was dropped). */
+export async function hasGmailGrant(userId: string): Promise<boolean> {
+	await ensureSchema();
+	const db = getDb();
+	const [row] = await db
+		.select({ userId: oauthTokens.userId })
+		.from(oauthTokens)
+		.where(eq(oauthTokens.userId, userId))
+		.limit(1);
+	return Boolean(row);
+}
+
+/** Forget a grant Google no longer honours so every later call asks to reconnect instead of retrying it. */
+export async function dropGmailGrant(userId: string): Promise<void> {
+	await ensureSchema();
+	await getDb().delete(oauthTokens).where(eq(oauthTokens.userId, userId));
+}
 
 export async function getValidAccessToken(userId: string): Promise<string> {
 	await ensureSchema();
 	const db = getDb();
 	const [row] = await db.select().from(oauthTokens).where(eq(oauthTokens.userId, userId)).limit(1);
-	if (!row) throw new Error('Gmail is not connected for this user');
+	if (!row) throw new GoogleReauthRequiredError('no_grant', 'Gmail is not connected for this account');
 
 	const skewMs = 60_000;
 	if (row.expiresAt.getTime() - skewMs > Date.now()) {
 		return row.accessToken;
 	}
 
-	const refreshed = await refreshAccessToken(row.refreshToken);
+	let refreshed;
+	try {
+		refreshed = await refreshAccessToken(row.refreshToken);
+	} catch (err) {
+		if (isReauthRequired(err)) await dropGmailGrant(userId);
+		throw err;
+	}
 	const expiresAt = new Date(Date.now() + refreshed.expires_in * 1000);
 	await db
 		.update(oauthTokens)
@@ -69,6 +93,7 @@ export async function listRecentMessageIds(
 	});
 	if (!res.ok) {
 		const text = await res.text();
+		if (res.status === 401) throw new GoogleReauthRequiredError(`gmail_401: ${text.slice(0, 200)}`);
 		throw new Error(`Gmail list failed: ${res.status} ${text}`);
 	}
 	const data = (await res.json()) as { messages?: Array<{ id: string; threadId: string }> };
@@ -83,6 +108,7 @@ export async function getMessage(accessToken: string, id: string): Promise<Gmail
 	);
 	if (!res.ok) {
 		const text = await res.text();
+		if (res.status === 401) throw new GoogleReauthRequiredError(`gmail_401: ${text.slice(0, 200)}`);
 		throw new Error(`Gmail get failed: ${res.status} ${text}`);
 	}
 	return res.json();

@@ -4,7 +4,7 @@ import type { RequestHandler } from './$types';
 import { googleAuthUrl } from '$lib/server/auth/google';
 import { getAppUrl } from '$lib/server/env';
 
-export const GET: RequestHandler = async ({ cookies, url }) => {
+export const GET: RequestHandler = async ({ cookies, url, locals }) => {
 	const state = randomBytes(16).toString('hex');
 	const secure = getAppUrl().startsWith('https://');
 
@@ -25,5 +25,8 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 		maxAge: 600
 	});
 
-	throw redirect(302, googleAuthUrl(state));
+	// reconnecting a signed-in user: preselect their account so it's one tap
+	const loginHint = url.searchParams.get('reconnect') === '1' ? locals.user?.email : undefined;
+
+	throw redirect(302, googleAuthUrl(state, loginHint));
 };

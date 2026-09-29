@@ -14,7 +14,7 @@
 		useDemoInbox,
 		ReauthRequiredError
 	} from '$lib/state/inbox.svelte';
-	import { reconnectGmailUrl } from '$lib/reconnect';
+	import { reauthCopy, reconnectGmailUrl } from '$lib/reconnect';
 	import { effectiveTags, tagMeta, tagStore, deleteTagged } from '$lib/state/organize.svelte';
 	import {
 		openThread,
@@ -71,19 +71,18 @@
 	let catchupLimit = $state(6);
 	let otherLimit = $state(10);
 	let syncError = $state<string | null>(null);
-	// Google stopped honouring our grant: show the reconnect card instead of retrying.
-	// Seeded from the server (grant row gone) and set again if a sync trips on it.
-	let syncReauth = $state<{ message: string; reconnectUrl: string } | null>(null);
-	const reauth = $derived(
-		syncReauth ??
-			(data.live && data.needsReauth
-				? { message: 'Gmail access expired or was revoked. Reconnect to keep syncing.', reconnectUrl: reconnectGmailUrl('/stream') }
-				: null)
-	);
+	// We can't read this account's mail (grant revoked, or the Gmail permission was
+	// never granted): show a card that says which, instead of retrying. Seeded from
+	// the server and set again if a sync trips on it.
+	let syncReauth = $state<{ reason: string; reconnectUrl: string } | null>(null);
+	const reauth = $derived.by(() => {
+		const src = syncReauth ?? (data.live && data.needsReauth ? { reason: data.reauthReason ?? 'revoked', reconnectUrl: reconnectGmailUrl('/stream') } : null);
+		return src ? { ...reauthCopy(src.reason), reconnectUrl: src.reconnectUrl } : null;
+	});
 
 	function failSync(err: unknown) {
 		if (err instanceof ReauthRequiredError) {
-			syncReauth = { message: err.message, reconnectUrl: err.reconnectUrl };
+			syncReauth = { reason: err.reason, reconnectUrl: err.reconnectUrl };
 			syncError = null;
 			return;
 		}
@@ -313,7 +312,7 @@
 					</svg>
 				</span>
 				<div class="min-w-0 flex-1">
-					<p class="text-[13px] font-semibold text-ink">Gmail needs reconnecting</p>
+					<p class="text-[13px] font-semibold text-ink">{reauth.title}</p>
 					<p class="text-[11.5px] leading-snug text-neutral-500">{reauth.message}</p>
 				</div>
 				<a
@@ -321,7 +320,7 @@
 					data-sveltekit-reload
 					class="tap-scale shrink-0 rounded-full bg-ink px-3.5 py-2 text-[12px] font-semibold text-white"
 				>
-					Reconnect
+					{reauth.cta}
 				</a>
 			</div>
 		{:else if syncError}

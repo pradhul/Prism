@@ -1,11 +1,7 @@
 import { getAppUrl, requireEnv } from '$lib/server/env';
+import { GMAIL_READONLY_SCOPE } from '$lib/reconnect';
 
-const SCOPES = [
-	'openid',
-	'email',
-	'profile',
-	'https://www.googleapis.com/auth/gmail.readonly'
-].join(' ');
+const SCOPES = ['openid', 'email', 'profile', GMAIL_READONLY_SCOPE].join(' ');
 
 /**
  * Google refused the grant in a way that only the user can fix by signing in

@@ -2,17 +2,44 @@ import { eq } from 'drizzle-orm';
 import { ensureSchema, getDb } from '$lib/server/db';
 import { oauthTokens } from '$lib/server/db/schema';
 import { GoogleReauthRequiredError, isReauthRequired, refreshAccessToken } from '$lib/server/auth/google';
+import { hasGmailScope } from '$lib/reconnect';
 
-/** Whether we still hold a Gmail grant for this user (false after a dead token was dropped). */
-export async function hasGmailGrant(userId: string): Promise<boolean> {
+export type GmailGrantStatus = 'ok' | 'no_grant' | 'insufficient_scope';
+
+/**
+ * What we hold for this user: nothing (dropped after a dead token), a grant that
+ * was issued without the Gmail permission (user unticked it on the consent
+ * screen), or a usable one. Rows from before scopes were recorded count as ok.
+ */
+export async function gmailGrantStatus(userId: string): Promise<GmailGrantStatus> {
 	await ensureSchema();
 	const db = getDb();
 	const [row] = await db
-		.select({ userId: oauthTokens.userId })
+		.select({ scope: oauthTokens.scope })
 		.from(oauthTokens)
 		.where(eq(oauthTokens.userId, userId))
 		.limit(1);
-	return Boolean(row);
+	if (!row) return 'no_grant';
+	if (row.scope !== null && !hasGmailScope(row.scope)) return 'insufficient_scope';
+	return 'ok';
+}
+
+/** Whether we still hold a Gmail grant for this user (false after a dead token was dropped). */
+export async function hasGmailGrant(userId: string): Promise<boolean> {
+	return (await gmailGrantStatus(userId)) !== 'no_grant';
+}
+
+const SCOPE_MESSAGE = 'Gmail permission was not granted — reconnect and allow “Read your email”';
+
+/** Gmail's 403 for a token that exists but lacks the mail scope. */
+function isScopeError(status: number, body: string): boolean {
+	return status === 403 && /ACCESS_TOKEN_SCOPE_INSUFFICIENT|insufficientPermissions|insufficient authentication scopes/i.test(body);
+}
+
+function gmailError(what: string, status: number, body: string): Error {
+	if (status === 401) return new GoogleReauthRequiredError(`gmail_401: ${body.slice(0, 200)}`);
+	if (isScopeError(status, body)) return new GoogleReauthRequiredError('insufficient_scope', SCOPE_MESSAGE);
+	return new Error(`Gmail ${what} failed: ${status} ${body}`);
 }
 
 /** Forget a grant Google no longer honours so every later call asks to reconnect instead of retrying it. */
@@ -26,6 +53,10 @@ export async function getValidAccessToken(userId: string): Promise<string> {
 	const db = getDb();
 	const [row] = await db.select().from(oauthTokens).where(eq(oauthTokens.userId, userId)).limit(1);
 	if (!row) throw new GoogleReauthRequiredError('no_grant', 'Gmail is not connected for this account');
+	// don't spend a refresh + API round-trip on a token we already know can't read mail
+	if (row.scope !== null && !hasGmailScope(row.scope)) {
+		throw new GoogleReauthRequiredError('insufficient_scope', SCOPE_MESSAGE);
+	}
 
 	const skewMs = 60_000;
 	if (row.expiresAt.getTime() - skewMs > Date.now()) {
@@ -91,11 +122,7 @@ export async function listRecentMessageIds(
 	const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?${params}`, {
 		headers: { Authorization: `Bearer ${accessToken}` }
 	});
-	if (!res.ok) {
-		const text = await res.text();
-		if (res.status === 401) throw new GoogleReauthRequiredError(`gmail_401: ${text.slice(0, 200)}`);
-		throw new Error(`Gmail list failed: ${res.status} ${text}`);
-	}
+	if (!res.ok) throw gmailError('list', res.status, await res.text());
 	const data = (await res.json()) as { messages?: Array<{ id: string; threadId: string }> };
 	return data.messages ?? [];
 }
@@ -106,11 +133,7 @@ export async function getMessage(accessToken: string, id: string): Promise<Gmail
 		`https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?${params}`,
 		{ headers: { Authorization: `Bearer ${accessToken}` } }
 	);
-	if (!res.ok) {
-		const text = await res.text();
-		if (res.status === 401) throw new GoogleReauthRequiredError(`gmail_401: ${text.slice(0, 200)}`);
-		throw new Error(`Gmail get failed: ${res.status} ${text}`);
-	}
+	if (!res.ok) throw gmailError('get', res.status, await res.text());
 	return res.json();
 }
 

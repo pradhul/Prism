@@ -5,6 +5,7 @@ import { exchangeCode, fetchGoogleProfile } from '$lib/server/auth/google';
 import { setSessionCookie } from '$lib/server/auth/session';
 import { ensureSchema, getDb } from '$lib/server/db';
 import { oauthTokens, users } from '$lib/server/db/schema';
+import { hasGmailScope } from '$lib/reconnect';
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
 	const code = url.searchParams.get('code');
@@ -87,6 +88,13 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			});
 
 		setSessionCookie(cookies, userId, profile.email);
+
+		// Google lets people untick "Read your email" and still complete sign-in; a sync
+		// would 403 straight away, so land on the Stream and let it ask for the permission
+		if (!hasGmailScope(tokens.scope)) {
+			console.warn('Gmail scope not granted', userId, tokens.scope);
+			throw redirect(302, next);
+		}
 
 		throw redirect(302, `${next}${next.includes('?') ? '&' : '?'}sync=1`);
 	} catch (err) {

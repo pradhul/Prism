@@ -30,10 +30,14 @@
 	// drag-to-dismiss on the grab handle / header
 	let dragY = $state(0);
 	let dragging = $state(false);
+	let closing = $state(false);
 	let startY = 0;
 	let startT = 0;
 
 	function dragStart(e: PointerEvent) {
+		// Capturing the pointer re-targets the click to the header, which swallowed
+		// taps on the close / expand controls — so never start a drag from them.
+		if ((e.target as HTMLElement).closest('button, a, input')) return;
 		dragging = true;
 		startY = e.clientY;
 		startT = performance.now();
@@ -68,7 +72,7 @@
 </script>
 
 <div
-	class="fixed inset-0 z-50 flex flex-col justify-end {stacked ? 'pointer-events-none' : ''}"
+	class="fixed inset-0 z-50 flex flex-col justify-end {stacked || closing ? 'pointer-events-none' : ''}"
 	role="dialog"
 	aria-modal="true"
 	aria-label={title}
@@ -80,6 +84,7 @@
 		class="absolute inset-0 bg-ink/35 backdrop-blur-[3px] transition-opacity duration-300 {stacked ? 'opacity-0' : ''}"
 		onclick={onclose}
 		transition:fade={{ duration: 220 }}
+		onoutrostart={() => (closing = true)}
 	></button>
 
 	<div

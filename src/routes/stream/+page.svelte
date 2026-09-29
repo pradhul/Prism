@@ -23,7 +23,9 @@
 		closeSheet,
 		expandSheet,
 		sheetFullHref,
-		searchSheetVisible
+		searchSheetVisible,
+		isOwnSheet,
+		dismissStaleSheet
 	} from '$lib/state/sheet.svelte';
 	import { groupMeta } from '$lib/data/groups';
 	import type { Group } from '$lib/types';
@@ -106,8 +108,12 @@
 		return map;
 	});
 
-	// the overlay currently open (thread / search / tags), driven by shallow routing
-	const sheet = $derived(page.state.sheet);
+	// the overlay currently open (thread / search / tags), driven by shallow routing;
+	// entries left behind by a reload are not ours and get cleared instead of shown
+	const sheet = $derived(page.state.sheet && isOwnSheet(page.state.sheet) ? page.state.sheet : undefined);
+	$effect(() => {
+		if (page.state.sheet) dismissStaleSheet();
+	});
 	const sheetThread = $derived(sheet?.kind === 'thread' ? getThread(sheet.id) : undefined);
 
 	function pickTag(name: string) {

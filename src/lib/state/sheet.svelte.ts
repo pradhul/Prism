@@ -1,4 +1,4 @@
-import { pushState, goto } from '$app/navigation';
+import { pushState, replaceState, goto } from '$app/navigation';
 import { page } from '$app/state';
 
 /**
@@ -17,8 +17,34 @@ export function currentSheet(): Sheet | undefined {
 	return page.state.sheet;
 }
 
+function key(sheet: Sheet): string {
+	return sheet.kind === 'thread' ? `thread:${sheet.id}:${sheet.under ?? ''}` : sheet.kind;
+}
+
+// Sheets pushed since this page was loaded. SvelteKit empties page.state on a
+// reload but keeps the history entry, so without this a stale entry would pop a
+// sheet back open the next time the user goes Back.
+const opened = new Set<string>();
+
 function show(sheet: Sheet) {
+	opened.add(key(sheet));
 	pushState('', { sheet });
+}
+
+/** True when the sheet in page.state was opened by this page session (not a leftover entry). */
+export function isOwnSheet(sheet: Sheet): boolean {
+	return opened.has(key(sheet));
+}
+
+/**
+ * Call from the Stream when page.state changes: a sheet we never opened here is a
+ * leftover from before a reload — clear it in place rather than showing it.
+ */
+export function dismissStaleSheet(): boolean {
+	const sheet = page.state.sheet;
+	if (!sheet || isOwnSheet(sheet)) return false;
+	replaceState('', {});
+	return true;
 }
 
 export function openThread(id: string, under?: 'search') {
@@ -38,9 +64,18 @@ export function openManage() {
 	show({ kind: 'manage' });
 }
 
-/** Sheets only exist as pushed history entries, so closing is just going back. */
+/**
+ * Sheets exist as pushed history entries, so closing is going back. If the entry
+ * somehow isn't ours (restored after a reload), clear the state in place instead so
+ * Back never carries the user off the Stream.
+ */
 export function closeSheet() {
-	if (!page.state.sheet) return;
+	const sheet = page.state.sheet;
+	if (!sheet) return;
+	if (!isOwnSheet(sheet)) {
+		replaceState('', {});
+		return;
+	}
 	history.back();
 }
 

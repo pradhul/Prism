@@ -2,7 +2,10 @@
 	import type { Thread } from '$lib/types';
 	import { clearMerchant, deleteThread } from '$lib/state/inbox.svelte';
 	import { senderIcon } from '$lib/data/senderIcons';
-	import { goto } from '$app/navigation';
+	import { openThread } from '$lib/state/sheet.svelte';
+	import { fly, slide } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
+	import { cubicOut, expoOut } from 'svelte/easing';
 
 	let { merchant, items }: { merchant: string; items: Thread[] } = $props();
 	const icon = $derived(senderIcon(merchant));
@@ -44,17 +47,18 @@
 
 	<div class="flex flex-col divide-y divide-black/[0.03]">
 		{#each visible as t (t.id)}
-			<div class="flex items-center gap-1 px-2 py-1 {t.unread ? '' : 'opacity-50'}">
+			<div
+				class="flex items-center gap-1 px-2 py-1 transition-opacity duration-300 {t.unread ? '' : 'opacity-50'}"
+				in:fly={{ x: -10, duration: 240, easing: expoOut }}
+				out:slide={{ duration: 200, easing: cubicOut }}
+				animate:flip={{ duration: 240, easing: cubicOut }}
+			>
 				<button
 					type="button"
-					onclick={() => goto(`/stream/${encodeURIComponent(t.id)}`)}
-					class="flex min-w-0 flex-1 items-center gap-2.5 px-2 py-1.5 text-left"
+					onclick={() => openThread(t.id)}
+					class="tap-scale flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-2 py-1.5 text-left"
 				>
-					{#if t.unread}
-						<span class="h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500"></span>
-					{:else}
-						<span class="h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-200"></span>
-					{/if}
+					<span class="h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-300 {t.unread ? 'bg-violet-500' : 'bg-neutral-200'}"></span>
 					<p class="min-w-0 flex-1 truncate text-[12.5px] {t.unread ? 'font-medium text-ink' : 'text-neutral-500'}">
 						{t.subject}
 					</p>

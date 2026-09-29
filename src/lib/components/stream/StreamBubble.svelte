@@ -1,9 +1,11 @@
 <script lang="ts">
 	import type { Thread } from '$lib/types';
 	import Avatar from '$lib/components/shared/Avatar.svelte';
-	import { markDone, deleteThread } from '$lib/state/inbox.svelte';
+	import { slide } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
+	import { markDone, markRead, markUnread, deleteThread } from '$lib/state/inbox.svelte';
 	import { effectiveTags, tagMeta } from '$lib/state/organize.svelte';
-	import { goto } from '$app/navigation';
+	import { openThread } from '$lib/state/sheet.svelte';
 
 	let { thread }: { thread: Thread } = $props();
 	let expanded = $state(false);
@@ -11,12 +13,18 @@
 	const tags = $derived(effectiveTags(thread));
 
 	function open() {
-		goto(`/stream/${encodeURIComponent(thread.id)}`);
+		openThread(thread.id);
 	}
 
 	function toggle(e: Event) {
 		e.stopPropagation();
 		expanded = !expanded;
+	}
+
+	function toggleRead(e: Event) {
+		e.stopPropagation();
+		if (thread.unread) markRead(thread.id);
+		else markUnread(thread.id);
 	}
 
 	function done(e: Event) {
@@ -87,9 +95,9 @@
 	</div>
 
 	{#if expanded}
-		<div class="mt-3 flex flex-col gap-1.5 rounded-2xl bg-white/70 p-3 ring-1 ring-black/[0.03]">
-			{#each thread.summary as line (line)}
-				<div class="flex items-start gap-2">
+		<div class="mt-3 flex flex-col gap-1.5 rounded-2xl bg-white/70 p-3 ring-1 ring-black/[0.03]" transition:slide={{ duration: 260, easing: cubicOut }}>
+			{#each thread.summary as line, i (line)}
+				<div class="rise flex items-start gap-2" style="--rise-delay: {60 + i * 50}ms">
 					<span class="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-violet-400"></span>
 					<p class="text-[12.5px] leading-relaxed text-neutral-600">{line}</p>
 				</div>
@@ -116,9 +124,30 @@
 
 		<button
 			type="button"
+			onclick={toggleRead}
+			aria-label={thread.unread ? 'Mark as read' : 'Mark as unread'}
+			title={thread.unread ? 'Mark as read' : 'Mark as unread'}
+			class="tap-scale tap-icon flex h-7 w-7 items-center justify-center rounded-full transition-colors {thread.unread
+				? 'text-violet-500 hover:bg-violet-50'
+				: 'text-neutral-300 hover:bg-neutral-100 hover:text-neutral-500'}"
+		>
+			{#if thread.unread}
+				<svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none">
+					<path d="M3 8l9 6 9-6M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+				</svg>
+			{:else}
+				<svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none">
+					<path d="M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+					<circle cx="18" cy="6" r="3" fill="#7c3aed" stroke="white" stroke-width="1.5" />
+				</svg>
+			{/if}
+		</button>
+
+		<button
+			type="button"
 			onclick={remove}
 			aria-label="Delete mail"
-			class="tap-scale flex h-7 w-7 items-center justify-center rounded-full text-neutral-300 transition-colors hover:bg-rose-50 hover:text-rose-500 active:bg-rose-50 active:text-rose-500"
+			class="tap-scale tap-icon flex h-7 w-7 items-center justify-center rounded-full text-neutral-300 transition-colors hover:bg-rose-50 hover:text-rose-500 active:bg-rose-50 active:text-rose-500"
 		>
 			<svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none">
 				<path

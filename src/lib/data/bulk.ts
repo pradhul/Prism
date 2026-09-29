@@ -357,6 +357,7 @@ function makeThread(opts: {
 		senderInitials: opts.initials,
 		avatar: opts.avatar,
 		tags: [],
+		noReply: true,
 		messages: [
 			{
 				id: 'm1',

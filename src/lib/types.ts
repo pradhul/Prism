@@ -61,4 +61,6 @@ export interface Thread {
 	actionLink?: { label: string; url: string };
 	/** set when the AI thinks the mail is a scam/phish; the action link is withheld */
 	risk?: { reasons: string[] };
+	/** automated sender — replying goes nowhere, so reply controls are hidden */
+	noReply?: boolean;
 }

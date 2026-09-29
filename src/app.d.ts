@@ -7,7 +7,13 @@ declare global {
 			user: { id: string; email: string } | null;
 		}
 		// interface PageData {}
-		// interface PageState {}
+		interface PageState {
+			/** in-place overlay on the Stream, driven by shallow routing so Back closes it */
+			sheet?:
+				| { kind: 'thread'; id: string; /** opened from the search sheet, which stays underneath */ under?: 'search' }
+				| { kind: 'search' }
+				| { kind: 'manage' };
+		}
 		// interface Platform {}
 	}
 }

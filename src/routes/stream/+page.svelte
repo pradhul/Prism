@@ -11,8 +11,10 @@
 		markUnread,
 		setLiveThreads,
 		syncLiveInbox,
-		useDemoInbox
+		useDemoInbox,
+		ReauthRequiredError
 	} from '$lib/state/inbox.svelte';
+	import { reconnectGmailUrl } from '$lib/reconnect';
 	import { effectiveTags, tagMeta, tagStore, deleteTagged } from '$lib/state/organize.svelte';
 	import {
 		openThread,
@@ -49,13 +51,13 @@
 	$effect(() => {
 		if (!data.live) return;
 		if (page.url.searchParams.get('sync') !== '1') return;
-		if (inbox.syncing) return;
+		if (inbox.syncing || reauth) return;
 		void (async () => {
 			try {
 				await syncLiveInbox();
 				await goto('/stream', { replaceState: true });
 			} catch (err) {
-				syncError = err instanceof Error ? err.message : 'Sync failed';
+				failSync(err);
 			}
 		})();
 	});
@@ -67,6 +69,24 @@
 	let catchupLimit = $state(6);
 	let otherLimit = $state(10);
 	let syncError = $state<string | null>(null);
+	// Google stopped honouring our grant: show the reconnect card instead of retrying.
+	// Seeded from the server (grant row gone) and set again if a sync trips on it.
+	let syncReauth = $state<{ message: string; reconnectUrl: string } | null>(null);
+	const reauth = $derived(
+		syncReauth ??
+			(data.live && data.needsReauth
+				? { message: 'Gmail access expired or was revoked. Reconnect to keep syncing.', reconnectUrl: reconnectGmailUrl('/stream') }
+				: null)
+	);
+
+	function failSync(err: unknown) {
+		if (err instanceof ReauthRequiredError) {
+			syncReauth = { message: err.message, reconnectUrl: err.reconnectUrl };
+			syncError = null;
+			return;
+		}
+		syncError = err instanceof Error ? err.message : 'Sync failed';
+	}
 
 	const allLive = $derived(inbox.threads.filter((t) => !t.archived));
 	const totalCount = $derived(allLive.length);
@@ -119,11 +139,12 @@
 	}
 
 	async function refresh() {
+		if (reauth) return;
 		syncError = null;
 		try {
 			await syncLiveInbox();
 		} catch (err) {
-			syncError = err instanceof Error ? err.message : 'Sync failed';
+			failSync(err);
 		}
 	}
 
@@ -208,7 +229,7 @@
 				<button
 					type="button"
 					onclick={refresh}
-					disabled={inbox.syncing}
+					disabled={inbox.syncing || reauth !== null}
 					aria-label="Refresh Gmail"
 					class="glass tap-scale tap-icon flex h-9 w-9 items-center justify-center rounded-full text-ink shadow-glass ring-1 ring-black/5 disabled:opacity-50"
 				>
@@ -274,7 +295,30 @@
 				<a class="font-semibold text-violet-600 underline" href="/api/auth/google?next=/stream">Connect Gmail</a>
 			</p>
 		{/if}
-		{#if syncError}
+		{#if reauth}
+			<div
+				class="mt-3 flex items-center gap-3 rounded-2xl bg-white p-3 shadow-glass ring-1 ring-amber-200"
+				transition:slide={{ duration: 240, easing: cubicOut }}
+				role="alert"
+			>
+				<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-500">
+					<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none">
+						<path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18.2A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+				</span>
+				<div class="min-w-0 flex-1">
+					<p class="text-[13px] font-semibold text-ink">Gmail needs reconnecting</p>
+					<p class="text-[11.5px] leading-snug text-neutral-500">{reauth.message}</p>
+				</div>
+				<a
+					href={reauth.reconnectUrl}
+					data-sveltekit-reload
+					class="tap-scale shrink-0 rounded-full bg-ink px-3.5 py-2 text-[12px] font-semibold text-white"
+				>
+					Reconnect
+				</a>
+			</div>
+		{:else if syncError}
 			<p class="mt-2 text-[12px] text-rose-600" transition:slide={{ duration: 200 }}>{syncError}</p>
 		{/if}
 	</div>

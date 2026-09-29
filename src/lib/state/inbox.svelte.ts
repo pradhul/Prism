@@ -32,13 +32,33 @@ export async function loadLiveInbox(): Promise<boolean> {
 	return true;
 }
 
+/** Google no longer honours our grant — the only fix is to run OAuth again. */
+export class ReauthRequiredError extends Error {
+	constructor(
+		message: string,
+		public readonly reconnectUrl: string
+	) {
+		super(message);
+		this.name = 'ReauthRequiredError';
+	}
+}
+
 export async function syncLiveInbox(): Promise<number> {
 	inbox.syncing = true;
 	try {
 		const res = await fetch('/api/inbox/sync', { method: 'POST' });
 		if (!res.ok) {
 			const text = await res.text();
-			throw new Error(text || 'Sync failed');
+			let body: { code?: string; message?: string; reconnectUrl?: string } = {};
+			try {
+				body = JSON.parse(text);
+			} catch {
+				// plain-text error
+			}
+			if (body.code === 'reauth_required') {
+				throw new ReauthRequiredError(body.message ?? 'Gmail needs to be reconnected', body.reconnectUrl ?? '/api/auth/google?next=/stream&reconnect=1');
+			}
+			throw new Error(body.message || text || 'Sync failed');
 		}
 		const data = (await res.json()) as { synced: number };
 		await loadLiveInbox();

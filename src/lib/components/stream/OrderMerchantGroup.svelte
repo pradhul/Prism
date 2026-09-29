@@ -1,8 +1,11 @@
 <script lang="ts">
 	import type { Thread } from '$lib/types';
-	import { clearMerchant } from '$lib/state/inbox.svelte';
+	import { clearMerchant, deleteThread } from '$lib/state/inbox.svelte';
 	import { senderIcon } from '$lib/data/senderIcons';
-	import { goto } from '$app/navigation';
+	import { openThread } from '$lib/state/sheet.svelte';
+	import { fly, slide } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
+	import { cubicOut, expoOut } from 'svelte/easing';
 
 	let { merchant, items }: { merchant: string; items: Thread[] } = $props();
 	const icon = $derived(senderIcon(merchant));
@@ -44,21 +47,40 @@
 
 	<div class="flex flex-col divide-y divide-black/[0.03]">
 		{#each visible as t (t.id)}
-			<button
-				type="button"
-				onclick={() => goto(`/stream/${encodeURIComponent(t.id)}`)}
-				class="flex items-center gap-2.5 px-4 py-2.5 text-left {t.unread ? '' : 'opacity-50'}"
+			<div
+				class="flex items-center gap-1 px-2 py-1 transition-opacity duration-300 {t.unread ? '' : 'opacity-50'}"
+				in:fly={{ x: -10, duration: 240, easing: expoOut }}
+				out:slide={{ duration: 200, easing: cubicOut }}
+				animate:flip={{ duration: 240, easing: cubicOut }}
 			>
-				{#if t.unread}
-					<span class="h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500"></span>
-				{:else}
-					<span class="h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-200"></span>
-				{/if}
-				<p class="min-w-0 flex-1 truncate text-[12.5px] {t.unread ? 'font-medium text-ink' : 'text-neutral-500'}">
-					{t.subject}
-				</p>
-				<span class="shrink-0 text-[10.5px] text-neutral-400">{t.timestamp}</span>
-			</button>
+				<button
+					type="button"
+					onclick={() => openThread(t.id)}
+					class="tap-scale flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-2 py-1.5 text-left"
+				>
+					<span class="h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-300 {t.unread ? 'bg-violet-500' : 'bg-neutral-200'}"></span>
+					<p class="min-w-0 flex-1 truncate text-[12.5px] {t.unread ? 'font-medium text-ink' : 'text-neutral-500'}">
+						{t.subject}
+					</p>
+					<span class="shrink-0 text-[10.5px] text-neutral-400">{t.timestamp}</span>
+				</button>
+				<button
+					type="button"
+					onclick={() => deleteThread(t.id)}
+					aria-label={`Delete ${t.subject}`}
+					class="tap-scale mr-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-neutral-300 transition-colors hover:bg-rose-50 hover:text-rose-500"
+				>
+					<svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none">
+						<path
+							d="M4 7h16M10 11v6m4-6v6M6 7l1 13a1 1 0 0 0 1 .9h8a1 1 0 0 0 1-.9L18 7M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
+							stroke="currentColor"
+							stroke-width="1.8"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</button>
+			</div>
 		{/each}
 	</div>
 

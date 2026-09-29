@@ -12,12 +12,13 @@ concepts — a card grid and a gestural reader — were removed from the app for
 focused; they live in git history.)
 
 **Tags & rules** (`/manage`): Gmail-style tags show as small pills next to the New/Read state on
-every mail. Tags can be created inline, pinned to any mail from its detail view ("+ Tag"), and
-managed centrally. Rules are shown in plain language ("When mail arrives from Swiggy, Zomato or
-Uber Eats → tag it Food"), each with a live match count, an on/off toggle (pills update
-everywhere instantly), delete, and a small two-field builder for new rules. Built-in AI behaviors
-(intent grouping, per-store order stacks, 14-day action pinning, phishing flags) are listed on
-the same screen so the inbox is never a black box.
+every mail, and again as filter pills next to Unread / All mail — tap a tag to see only its
+mail, then Read all or Delete all. Tags can be created inline, pinned to any mail from its
+detail view ("+ Tag"), and managed centrally. Rules are drafted in plain language ("tag Swiggy
+and Zomato mails as Food") — Prism proposes the rule, you confirm. Each rule has a live match
+count, an on/off toggle, and delete. Built-in AI behaviors (intent grouping, per-store order
+stacks, 14-day action pinning, phishing flags) are listed on the same screen so the inbox is
+never a black box.
 
 Every view also links to **AI search** (`/search`): describe a mail loosely ("the pdf marcus
 sent about the timeline", "amazon refund last month") and Prism scores the whole mailbox against
@@ -29,10 +30,10 @@ To feel honest at real-inbox scale, the prototype simulates a mailbox of **~1,40
 generated long tail (`src/lib/data/bulk.ts`). Read/unread, mark-done, and clear-merchant state is
 held in a reactive store (`src/lib/state/inbox.svelte.ts`).
 
-Known senders show a **brand mark** on their mail cards (Amazon, Myntra, Swiggy, Flipkart,
-GitHub, Slack, Stripe, Google Drive…) — standing in for the logo a real client would pull from
-the mail itself — so mail is recognizable at a glance; humans keep initials avatars
-(`src/lib/data/senderIcons.ts`).
+Every mail shows a **recognizable mark** (`src/lib/data/senderIcons.ts`): brand logos for known
+senders (Amazon, Myntra, Swiggy, Flipkart, GitHub, Slack, Stripe, Google Drive…), role glyphs
+for people and teams, and a stable generated icon for everyone else — standing in for the logo
+a real client would pull from the mail itself.
 
 AI summaries are **specific, not generic**: an order mail tells you what was ordered, for how
 much, to which address, and when it arrives. When a mail contains an external link, it surfaces

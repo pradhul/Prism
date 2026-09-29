@@ -69,12 +69,49 @@ export function markRead(id: string) {
 	}
 }
 
+export function markUnread(id: string) {
+	const t = getThread(id);
+	if (t) {
+		t.unread = true;
+		persistPatch(id, { unread: true });
+	}
+}
+
 export function markDone(id: string, done = true) {
 	const t = getThread(id);
 	if (t) {
 		t.done = done;
 		if (done) t.unread = false;
 		persistPatch(id, { done, unread: done ? false : t.unread });
+	}
+}
+
+/**
+ * Prototype send: the reply lands in the thread as a message from "You" so the
+ * conversation reads as continued. Nothing leaves the device.
+ */
+export function appendReply(id: string, text: string, to: string[]) {
+	const t = getThread(id);
+	const body = text.trim();
+	if (!t || !body) return;
+	t.messages.push({
+		id: `${id}-reply-${Date.now()}`,
+		sender: 'You',
+		senderInitials: 'You',
+		avatar: 'bg-violet-100 text-violet-700',
+		time: `Just now · to ${to.join(', ')}`,
+		body: [body]
+	});
+	if (t.group === 'action' && !t.done) markDone(id);
+}
+
+/** "Delete" in the prototype = archive: the mail leaves every view but stays recoverable. */
+export function deleteThread(id: string) {
+	const t = getThread(id);
+	if (t) {
+		t.archived = true;
+		t.unread = false;
+		persistPatch(id, { archived: true, unread: false });
 	}
 }
 

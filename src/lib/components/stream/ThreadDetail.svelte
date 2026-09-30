@@ -16,6 +16,7 @@
 	import { groupMeta } from '$lib/data/groups';
 	import { categories } from '$lib/data/categories';
 	import { replyInfo } from '$lib/reply';
+	import { linkify, type TextPart } from '$lib/linkify';
 	import Avatar from '$lib/components/shared/Avatar.svelte';
 
 	let {
@@ -92,6 +93,27 @@
 		}
 	}
 </script>
+
+{#snippet bodyLink(part: Extract<TextPart, { kind: 'link' }>)}
+	{#if thread.risk}
+		<span
+			class="cursor-not-allowed rounded bg-rose-100/70 px-1 py-px font-medium text-rose-600 line-through decoration-rose-300"
+			title="Link withheld — this mail was flagged as suspicious"
+			>{part.label}</span
+		>
+	{:else}
+		<a
+			href={part.href}
+			target="_blank"
+			rel="noopener noreferrer"
+			title={part.text}
+			class="rounded font-medium [overflow-wrap:anywhere] text-violet-600 underline decoration-violet-300 underline-offset-2 active:bg-violet-50"
+			>{part.label}<svg viewBox="0 0 24 24" class="mb-0.5 ml-0.5 inline h-3 w-3 opacity-60" fill="none" aria-hidden="true"
+				><path d="M7 17 17 7m0 0H9m8 0v8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" /></svg
+			></a
+		>
+	{/if}
+{/snippet}
 
 <div class="flex min-h-0 flex-1 flex-col {variant === 'page' ? 'h-dvh bg-paper' : ''}">
 	{#if variant === 'page'}
@@ -347,7 +369,7 @@
 									? 'font-medium text-rose-600'
 									: 'text-ink/75'}"
 							>
-								{para}
+								{#each linkify(para) as part, j (j)}{#if part.kind === 'text'}{part.text}{:else}{@render bodyLink(part)}{/if}{/each}
 							</p>
 						{/each}
 					</div>

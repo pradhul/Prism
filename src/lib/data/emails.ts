@@ -332,7 +332,12 @@ export const curatedThreads: Thread[] = [
 				senderInitials: 'AZ',
 				avatar: avatars.amber,
 				time: 'Today, 07:40',
-				body: ['Good news — your order is on its way.', 'Desk lamp, USB-C cable ×2. Arriving Thursday.']
+				body: [
+					'Good news — your order is on its way.',
+					'Desk lamp, USB-C cable ×2. Arriving Thursday.',
+					'Track your package: https://amazon.example.com/track/4471-99',
+					'Questions about your order? Reply to orders@amazon.example.com or visit www.amazon.example.com/help.'
+				]
 			}
 		]
 	},
@@ -753,7 +758,7 @@ export const curatedThreads: Thread[] = [
 				body: [
 					'Dear customer, your package IN88291 is on hold at our facility.',
 					'A customs fee of ₹49 is required to release delivery. Pay within 24 hours or the package will be returned to sender.',
-					'Click the secure link to complete payment.'
+					'Click the secure link to complete payment: http://indiapost-secure-verify.info/pay'
 				]
 			}
 		]
